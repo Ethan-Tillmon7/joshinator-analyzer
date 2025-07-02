@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 
-interface StreamViewerProps {
+export interface StreamViewerProps {
   frameData: { image: string; timestamp: number } | null;
+  isAnalyzing: boolean;
+  regionSelected: boolean;
 }
 
 const StreamViewer: React.FC<StreamViewerProps> = ({ frameData }) => {
