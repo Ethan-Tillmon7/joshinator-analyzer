@@ -3,9 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from app.api import routes, websocket
 from app.config import settings
+from .api.claude_routes import router as claude_router
+
 
 # Create FastAPI app
 app = FastAPI(title="Sports Card Analyzer API")
+app.include_router(claude_router)
+
 
 # Configure CORS
 app.add_middleware(
