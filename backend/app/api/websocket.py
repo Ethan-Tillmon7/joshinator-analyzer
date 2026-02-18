@@ -9,6 +9,7 @@ from app.services.pricing_service import pricing_service
 from app.services.claude_service import claude_service
 from app.services.roi_calculator import roi_calculator
 from app.services.screen_capture import screen_capture
+from app.services.audio_service import audio_service
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,35 @@ _session_state: Dict[str, Any] = {
 }
 
 LAST_KNOWN_CARD_TTL_SECONDS = 30
+
+
+def _fuse_identities(
+    ocr_card_info: Dict,
+    audio_attrs: Dict,
+    ocr_confidence: float,
+    audio_confidence: float,
+) -> Dict:
+    """Merge OCR and audio attributes using confidence weighting.
+
+    For each field: if OCR is missing → take audio.
+    If both present and audio is stronger → audio wins.
+    """
+    fused = dict(ocr_card_info)
+    total = ocr_confidence + audio_confidence
+    if total <= 0:
+        return fused
+    audio_weight = audio_confidence / total
+
+    for field in ("grade", "year", "set_name", "rookie"):
+        ocr_val = ocr_card_info.get(field)
+        audio_val = audio_attrs.get(field)
+        if not ocr_val and audio_val:
+            fused[field] = audio_val
+        elif ocr_val and audio_val and audio_weight > 0.5:
+            fused[field] = audio_val
+
+    fused["audio_confidence"] = audio_confidence
+    return fused
 
 
 def init_socketio(sio_instance) -> None:
@@ -68,6 +98,7 @@ def _register_events() -> None:
     @sio.event
     async def start_analysis(sid):
         logger.info("Starting analysis for client: %s", sid)
+        audio_service.start()
 
         if not screen_capture.capture_region:
             await sio.emit("error", {"message": "Please select a capture region first"}, to=sid)
@@ -106,6 +137,13 @@ def _register_events() -> None:
                     card_info[key] = ocr_result["card_info"][key]
 
             card_info["ocr_engine"] = ocr_result.get("ocr_engine", "unknown")
+
+            # --- Audio fusion ---
+            audio_data = audio_service.get_latest()
+            audio_attrs = audio_data.get("attributes", {})
+            audio_conf = audio_data.get("audio_confidence", 0.0)
+            ocr_conf = ocr_result.get("confidence", 0.0)
+            card_info = _fuse_identities(card_info, audio_attrs, ocr_conf, audio_conf)
 
             # --- Last-known-card TTL ---
             now = time.time()
@@ -158,6 +196,11 @@ def _register_events() -> None:
                 "claude_analysis": claude_analysis,
                 "confidence": calculate_detection_confidence(card_info, auction_info),
                 "timestamp": frame_count,
+                "audio_status": {
+                    "is_active": audio_service.is_available() and audio_service._is_running,
+                    "audio_confidence": audio_data.get("audio_confidence", 0.0),
+                    "transcript_preview": (audio_data.get("transcript") or "")[:80],
+                },
             }, to=sid)
 
         try:
@@ -168,6 +211,7 @@ def _register_events() -> None:
     @sio.event
     async def stop_analysis(sid):
         logger.info("Stopping analysis for client: %s", sid)
+        audio_service.stop()
         screen_capture.stop_capture()
         await sio.emit("analysis_stopped", {"message": "Analysis stopped"}, to=sid)
 

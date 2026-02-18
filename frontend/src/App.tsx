@@ -15,6 +15,7 @@ function App() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [regionSelected, setRegionSelected] = useState(false);
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisResult[]>([]);
+  const [audioActive, setAudioActive] = useState(false);
   
   // Memoized callbacks to prevent unnecessary re-renders
   const handleFrameData = useCallback((data: FrameData) => {
@@ -23,8 +24,8 @@ function App() {
 
   const handleAnalysisResult = useCallback((result: AnalysisResult) => {
     setAnalysisResult(result);
-    setAnalysisHistory(prev => [result, ...prev.slice(0, 9)]); // Keep last 10 results
-    console.log('Received analysis result:', result);
+    setAnalysisHistory(prev => [result, ...prev.slice(0, 9)]);
+    setAudioActive(!!(result as any).audio_status?.is_active);
   }, []);
 
   const handleSocketError = useCallback((err: SocketError) => {
@@ -169,6 +170,12 @@ function App() {
               <div className="analyzing-indicator">
                 <span className="spinner-small"></span>
                 <span>Analyzing...</span>
+              </div>
+            )}
+            {isAnalyzing && (
+              <div className={`mic-indicator ${audioActive ? 'mic-on' : 'mic-off'}`}>
+                <span>MIC</span>
+                <span>{audioActive ? 'ON' : 'OFF'}</span>
               </div>
             )}
           </div>

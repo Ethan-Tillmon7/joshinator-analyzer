@@ -122,6 +122,13 @@ export interface AnalysisResult {
   timestamp: number;
   processing_time: number;
   analysis_version: string;
+
+  // Phase 2: audio
+  audio_status?: {
+    is_active: boolean;
+    audio_confidence: number;
+    transcript_preview?: string;
+  };
 }
 
 // Additional utility types
