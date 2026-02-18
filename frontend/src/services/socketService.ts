@@ -76,6 +76,12 @@ class SocketService {
     }
   }
 
+  onSessionStarted(callback: (data: { session_id: string }) => void): void {
+    if (this.socket) {
+      this.socket.on('session_started', callback);
+    }
+  }
+
   // Remove listeners
   removeAllListeners(): void {
     if (this.socket) {

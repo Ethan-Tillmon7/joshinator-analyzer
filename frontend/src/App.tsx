@@ -16,6 +16,7 @@ function App() {
   const [regionSelected, setRegionSelected] = useState(false);
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisResult[]>([]);
   const [audioActive, setAudioActive] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   
   // Memoized callbacks to prevent unnecessary re-renders
   const handleFrameData = useCallback((data: FrameData) => {
@@ -79,6 +80,9 @@ function App() {
       socketService.onFrame(handleFrameData);
       socketService.onAnalysisResult(handleAnalysisResult);
       socketService.onError(handleSocketError);
+      socketService.onSessionStarted((data) => {
+        if (mounted) setSessionId(data.session_id);
+      });
       
     } catch (err) {
       if (mounted) {
@@ -346,6 +350,12 @@ function App() {
               <>
                 <span>•</span>
                 <span>{analysisHistory.length} analysis results stored</span>
+              </>
+            )}
+            {sessionId && (
+              <>
+                <span>•</span>
+                <span title={sessionId}>Session {sessionId.slice(0, 8)}</span>
               </>
             )}
           </div>

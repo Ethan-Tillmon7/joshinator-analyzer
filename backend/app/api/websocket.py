@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+import uuid
 from typing import Any, Dict
 
 from app.config import settings
@@ -10,6 +11,7 @@ from app.services.claude_service import claude_service
 from app.services.roi_calculator import roi_calculator
 from app.services.screen_capture import screen_capture
 from app.services.audio_service import audio_service
+from app.services.session_log_service import session_log
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +106,11 @@ def _register_events() -> None:
             await sio.emit("error", {"message": "Please select a capture region first"}, to=sid)
             return
 
+        session_id = str(uuid.uuid4())
+        _session_state["session_id"] = session_id
+        await sio.emit("session_started", {"session_id": session_id}, to=sid)
+        logger.info("Session started: %s", session_id)
+
         frame_count = 0
 
         async def process_frame(frame_array, frame_b64, _frame_num):
@@ -188,7 +195,7 @@ def _register_events() -> None:
                 logger.warning("Claude analysis failed: %s", e)
                 claude_analysis = {}
 
-            await sio.emit("analysis_result", {
+            result_payload = {
                 "card_info": card_info,
                 "auction_info": auction_info,
                 "pricing_data": pricing_data,
@@ -201,7 +208,15 @@ def _register_events() -> None:
                     "audio_confidence": audio_data.get("audio_confidence", 0.0),
                     "transcript_preview": (audio_data.get("transcript") or "")[:80],
                 },
-            }, to=sid)
+            }
+            await sio.emit("analysis_result", result_payload, to=sid)
+
+            # Persist to session log (non-blocking — errors must not break the pipeline)
+            try:
+                current_session_id = _session_state.get("session_id") or sid
+                session_log.log(current_session_id, result_payload)
+            except Exception as log_err:
+                logger.warning("Session log write failed: %s", log_err)
 
         try:
             await screen_capture.start_capture_stream(process_frame, fps=settings.CAPTURE_FPS)

@@ -11,6 +11,9 @@ class ROICalculator:
         "SGC 10": 2.0, "SGC 9": 1.5, "SGC 8": 1.1,
     }
 
+    # Approximate all-in resale fee (eBay ~13% + shipping buffer)
+    RESALE_FEE_RATE = 0.15
+
     def calculate_roi_analysis(
         self, card_info: Dict, current_bid: float, pricing_data: Dict
     ) -> Dict:
@@ -41,12 +44,23 @@ class ROICalculator:
         roi_potential = ((estimated - current_bid) / current_bid) * 100
         rec_data = self._generate_recommendation(roi_potential, pricing_data)
 
+        break_even_price = current_bid * (1 + self.RESALE_FEE_RATE)
+        profit_margin = ((estimated - current_bid) / estimated * 100) if estimated > 0 else 0.0
+        risk_factors = self._generate_risk_factors(card_info, pricing_data)
+        risk_level = self._calculate_risk_level(pricing_data, roi_potential)
+        deal_score = self._calculate_deal_score(roi_potential, len(prices), rec_data["confidence"])
+
         return {
             **rec_data,
             "roi_potential": roi_potential,
             "fair_value_range": fair_value,
             "suggested_max_bid": estimated * 0.8,
+            "break_even_price": break_even_price,
+            "profit_margin": profit_margin,
             "key_factors": self._generate_key_factors(card_info, pricing_data, roi_potential),
+            "risk_factors": risk_factors,
+            "risk_level": risk_level,
+            "deal_score": deal_score,
             "insufficient_data_reason": None,
             "comp_count": len(prices),
         }
@@ -61,7 +75,12 @@ class ROICalculator:
             "fair_value_range": {"min": 0, "max": 0, "estimated": 0},
             "confidence": 0.0,
             "suggested_max_bid": 0.0,
+            "break_even_price": 0.0,
+            "profit_margin": 0.0,
             "key_factors": [],
+            "risk_factors": [],
+            "risk_level": "high",
+            "deal_score": 0,
             "insufficient_data_reason": reason,
             "comp_count": 0,
         }
@@ -151,6 +170,44 @@ class ROICalculator:
             factors.append("Rookie card — higher collectibility")
 
         return factors
+
+    def _generate_risk_factors(self, card_info: Dict, pricing_data: Dict) -> List[str]:
+        factors = []
+        prices = pricing_data.get("prices", [])
+
+        if len(prices) < 6:
+            factors.append("Thin market data — higher price uncertainty")
+
+        if not card_info.get("grade"):
+            factors.append("Ungraded — condition unknown")
+
+        avg = pricing_data.get("average", 0)
+        std_dev = pricing_data.get("standard_deviation", 0)
+        if avg > 0 and (std_dev / avg) > 0.3:
+            factors.append("High price volatility in recent sales")
+
+        return factors
+
+    def _calculate_risk_level(self, pricing_data: Dict, roi_potential: float) -> str:
+        prices = pricing_data.get("prices", [])
+        avg = pricing_data.get("average", 0)
+        std_dev = pricing_data.get("standard_deviation", 0)
+        volatility = (std_dev / avg) if avg > 0 else 1.0
+
+        if volatility < 0.2 and len(prices) >= 8 and roi_potential > 15:
+            return "low"
+        elif volatility < 0.4 or (len(prices) >= 5 and roi_potential > 0):
+            return "medium"
+        else:
+            return "high"
+
+    def _calculate_deal_score(
+        self, roi_potential: float, price_count: int, confidence: float
+    ) -> int:
+        # roi_potential: -20 → score 0, +30 → score 100
+        roi_score = min(100, max(0, (roi_potential + 20) * 2))
+        data_score = min(100, price_count * 10)
+        return int(roi_score * 0.6 + data_score * 0.2 + confidence * 100 * 0.2)
 
 
 roi_calculator = ROICalculator()
