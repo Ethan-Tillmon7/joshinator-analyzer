@@ -9,7 +9,7 @@ from app.services.ocr_service import ocr_service
 from app.services.pricing_service import pricing_service
 from app.services.claude_service import claude_service
 from app.services.roi_calculator import roi_calculator
-from app.services.screen_capture import screen_capture
+from app.services.screen_capture import screen_capture, vod_replay
 from app.services.audio_service import audio_service
 from app.services.session_log_service import session_log
 
@@ -228,7 +228,117 @@ def _register_events() -> None:
         logger.info("Stopping analysis for client: %s", sid)
         audio_service.stop()
         screen_capture.stop_capture()
+        vod_replay.stop_replay()
         await sio.emit("analysis_stopped", {"message": "Analysis stopped"}, to=sid)
+
+    @sio.event
+    async def load_vod(sid, data):
+        """Load a video file for VOD replay mode."""
+        video_path = (data or {}).get("path", "")
+        if not video_path:
+            await sio.emit("error", {"message": "No video path provided"}, to=sid)
+            return
+        try:
+            meta = vod_replay.load_video(video_path)
+            if meta["success"]:
+                await sio.emit("vod_loaded", meta, to=sid)
+                logger.info("VOD loaded: %s (%.1fs)", video_path, meta.get("duration_seconds", 0))
+            else:
+                await sio.emit("error", {"message": meta.get("error", "Failed to load video")}, to=sid)
+        except Exception as e:
+            await sio.emit("error", {"message": f"VOD load error: {str(e)}"}, to=sid)
+
+    @sio.event
+    async def start_vod_replay(sid):
+        """Replay the loaded VOD through the same analysis pipeline as live capture."""
+        logger.info("Starting VOD replay for client: %s", sid)
+        audio_service.start()
+
+        session_id = str(uuid.uuid4())
+        _session_state["session_id"] = session_id
+        await sio.emit("session_started", {"session_id": session_id}, to=sid)
+
+        # Reuse the same process_frame closure shape as start_analysis
+        frame_count = 0
+
+        async def process_vod_frame(frame_array, frame_b64, _frame_num):
+            nonlocal frame_count
+            frame_count += 1
+            await sio.emit("frame", {"image": frame_b64, "timestamp": frame_count}, to=sid)
+
+            if frame_count % settings.PROCESS_EVERY_N_FRAMES != 0:
+                return
+
+            try:
+                ocr_result = await ocr_service.extract_text_dual_region(frame_array)
+            except Exception as e:
+                logger.warning("VOD OCR failed on frame %d: %s", frame_count, e)
+                ocr_result = {"texts": [], "confidence": 0.0, "card_info": {}, "text": "",
+                              "ocr_engine": ocr_service.ocr_engine}
+
+            ocr_text = ocr_result.get("text", "")
+            card_info = parse_whatsnot_card_info(ocr_text)
+            auction_info = parse_whatsnot_auction_info(ocr_text)
+
+            for key in ("player_name", "year", "set_name", "card_number", "grade", "rookie"):
+                if not card_info.get(key) and ocr_result.get("card_info", {}).get(key):
+                    card_info[key] = ocr_result["card_info"][key]
+            card_info["ocr_engine"] = ocr_result.get("ocr_engine", "unknown")
+
+            audio_data = audio_service.get_latest()
+            card_info = _fuse_identities(
+                card_info, audio_data.get("attributes", {}),
+                ocr_result.get("confidence", 0.0), audio_data.get("audio_confidence", 0.0),
+            )
+
+            if not card_info.get("player_name"):
+                return
+
+            try:
+                pricing_data = await pricing_service.get_card_prices(card_info)
+            except Exception as e:
+                logger.error("VOD pricing fetch failed: %s", e)
+                pricing_data = {"count": 0, "prices": [], "average": 0.0, "median": 0.0, "query_used": ""}
+
+            roi_analysis = roi_calculator.calculate_roi_analysis(
+                card_info, auction_info.get("current_bid", 0), pricing_data
+            )
+
+            try:
+                claude_analysis = await claude_service.generate_deal_recommendation(
+                    card_info, auction_info.get("current_bid", 0)
+                )
+            except Exception as e:
+                logger.warning("VOD Claude analysis failed: %s", e)
+                claude_analysis = {}
+
+            result_payload = {
+                "card_info": card_info,
+                "auction_info": auction_info,
+                "pricing_data": pricing_data,
+                "roi_analysis": roi_analysis,
+                "claude_analysis": claude_analysis,
+                "confidence": calculate_detection_confidence(card_info, auction_info),
+                "timestamp": frame_count,
+                "audio_status": {
+                    "is_active": audio_service.is_available() and audio_service._is_running,
+                    "audio_confidence": audio_data.get("audio_confidence", 0.0),
+                    "transcript_preview": (audio_data.get("transcript") or "")[:80],
+                },
+            }
+            await sio.emit("analysis_result", result_payload, to=sid)
+            try:
+                session_log.log(session_id, result_payload)
+            except Exception as log_err:
+                logger.warning("VOD session log write failed: %s", log_err)
+
+        try:
+            await vod_replay.start_replay_stream(process_vod_frame, target_fps=settings.CAPTURE_FPS)
+            await sio.emit("vod_replay_complete", {"message": "VOD replay finished"}, to=sid)
+        except Exception as e:
+            await sio.emit("error", {"message": f"VOD replay error: {str(e)}"}, to=sid)
+        finally:
+            audio_service.stop()
 
 
 # ---------------------------------------------------------------------------

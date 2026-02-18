@@ -17,6 +17,9 @@ function App() {
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisResult[]>([]);
   const [audioActive, setAudioActive] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [vodMode, setVodMode] = useState(false);
+  const [vodPath, setVodPath] = useState('');
+  const [vodStatus, setVodStatus] = useState<string | null>(null);
   
   // Memoized callbacks to prevent unnecessary re-renders
   const handleFrameData = useCallback((data: FrameData) => {
@@ -82,6 +85,12 @@ function App() {
       socketService.onError(handleSocketError);
       socketService.onSessionStarted((data) => {
         if (mounted) setSessionId(data.session_id);
+      });
+      socketService.onVODLoaded((data) => {
+        if (mounted) setVodStatus(`Loaded — ${data.duration_seconds.toFixed(1)}s, ${data.frame_count} frames`);
+      });
+      socketService.onVODReplayComplete(() => {
+        if (mounted) { setIsAnalyzing(false); setVodStatus('Replay complete'); }
       });
       
     } catch (err) {
@@ -217,7 +226,7 @@ function App() {
             </button>
 
             {analysisHistory.length > 0 && (
-              <button 
+              <button
                 onClick={clearAnalysisHistory}
                 disabled={isAnalyzing}
                 className="btn btn-outline btn-small"
@@ -226,7 +235,43 @@ function App() {
                 🗑️ Clear History
               </button>
             )}
+            <button
+              onClick={() => { setVodMode(v => !v); setVodStatus(null); }}
+              disabled={isAnalyzing}
+              className={`btn btn-outline btn-small ${vodMode ? 'btn-success' : ''}`}
+              title="Toggle VOD replay mode"
+            >
+              🎬 {vodMode ? 'VOD ON' : 'VOD'}
+            </button>
           </div>
+
+          {vodMode && (
+            <div className="vod-controls">
+              <input
+                className="vod-path-input"
+                type="text"
+                placeholder="/path/to/recording.mp4"
+                value={vodPath}
+                onChange={e => setVodPath(e.target.value)}
+                disabled={isAnalyzing}
+              />
+              <button
+                className="btn btn-outline btn-small"
+                disabled={!vodPath || isAnalyzing}
+                onClick={() => { setVodStatus('Loading…'); socketService.loadVOD(vodPath); }}
+              >
+                Load
+              </button>
+              <button
+                className="btn btn-primary btn-small"
+                disabled={!vodStatus || isAnalyzing || !isConnected}
+                onClick={() => { setIsAnalyzing(true); socketService.startVODReplay(); }}
+              >
+                ▶ Replay
+              </button>
+              {vodStatus && <span className="vod-status">{vodStatus}</span>}
+            </div>
+          )}
           
           <div className="status-info">
             {frameData && (

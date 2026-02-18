@@ -82,6 +82,31 @@ class SocketService {
     }
   }
 
+  // VOD replay
+  loadVOD(path: string): void {
+    if (this.socket) {
+      this.socket.emit('load_vod', { path });
+    }
+  }
+
+  startVODReplay(): void {
+    if (this.socket) {
+      this.socket.emit('start_vod_replay');
+    }
+  }
+
+  onVODLoaded(callback: (data: { success: boolean; frame_count: number; fps: number; duration_seconds: number }) => void): void {
+    if (this.socket) {
+      this.socket.on('vod_loaded', callback);
+    }
+  }
+
+  onVODReplayComplete(callback: (data: { message: string }) => void): void {
+    if (this.socket) {
+      this.socket.on('vod_replay_complete', callback);
+    }
+  }
+
   // Remove listeners
   removeAllListeners(): void {
     if (this.socket) {

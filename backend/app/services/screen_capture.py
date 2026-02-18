@@ -157,6 +157,83 @@ class ScreenCaptureService:
 # Create singleton instance
 screen_capture = ScreenCaptureService()
 
+
+class VODReplayService:
+    """Replay a recorded video file through the same analysis pipeline as live capture."""
+
+    def __init__(self):
+        self._is_replaying = False
+        self._video_path: Optional[str] = None
+
+    def load_video(self, video_path: str) -> dict:
+        """Validate the video file and return metadata."""
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            cap.release()
+            return {"success": False, "error": f"Cannot open video: {video_path}"}
+
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        duration = frame_count / fps
+        cap.release()
+
+        self._video_path = video_path
+        return {
+            "success": True,
+            "frame_count": frame_count,
+            "fps": fps,
+            "duration_seconds": duration,
+        }
+
+    async def start_replay_stream(self, process_callback: Callable, target_fps: int = 5) -> None:
+        """Read frames from the loaded video and push them through process_callback."""
+        if not self._video_path:
+            raise RuntimeError("No video loaded — call load_video() first")
+
+        cap = cv2.VideoCapture(self._video_path)
+        if not cap.isOpened():
+            cap.release()
+            raise RuntimeError(f"Cannot open video: {self._video_path}")
+
+        video_fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        frame_skip = max(1, int(video_fps / target_fps))
+        frame_interval = 1.0 / target_fps
+
+        self._is_replaying = True
+        frame_num = 0
+
+        try:
+            while self._is_replaying:
+                ret, bgr_frame = cap.read()
+                if not ret:
+                    break  # end of video
+
+                frame_num += 1
+                if frame_num % frame_skip != 0:
+                    continue
+
+                # BGR → RGB (same as live capture)
+                rgb_frame = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
+                frame_b64 = screen_capture.frame_to_base64(rgb_frame)
+
+                start = asyncio.get_event_loop().time()
+                await process_callback(rgb_frame, frame_b64, frame_num)
+                elapsed = asyncio.get_event_loop().time() - start
+                sleep_time = max(0, frame_interval - elapsed)
+                if sleep_time:
+                    await asyncio.sleep(sleep_time)
+                else:
+                    await asyncio.sleep(0)
+        finally:
+            cap.release()
+            self._is_replaying = False
+
+    def stop_replay(self) -> None:
+        self._is_replaying = False
+
+
+vod_replay = VODReplayService()
+
 # Helper functions for easy usage
 def setup_whatsnot_region():
     """Setup a region optimized for Whatsnot streams"""
