@@ -78,14 +78,27 @@ def _register_events() -> None:
         screen_capture.stop_capture()
 
     @sio.event
-    async def select_region(sid):
+    async def select_region(sid, data=None):
         try:
-            region = screen_capture.select_capture_region()
+            data = data or {}
+            top = data.get("top")
+            left = data.get("left")
+            width = data.get("width")
+            height = data.get("height")
+
+            if all(v is not None for v in (top, left, width, height)):
+                region = screen_capture.set_custom_region(
+                    top=int(top), left=int(left),
+                    width=int(width), height=int(height),
+                )
+            else:
+                region = screen_capture.select_capture_region()
+
             if region:
                 await sio.emit(
                     "region_selected",
                     {"success": True, "region": region,
-                     "message": f"Region selected: {region['width']}x{region['height']}"},
+                     "message": f"Region set: {region['width']}x{region['height']} at ({region['left']}, {region['top']})"},
                     to=sid,
                 )
             else:

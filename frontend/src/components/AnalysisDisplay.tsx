@@ -5,10 +5,9 @@ import { AnalysisResult } from '../types';
 interface Props {
   result: AnalysisResult | null;
   isAnalyzing: boolean;
-  history?: AnalysisResult[]; // Optional history prop for future use
 }
 
-const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing, history }) => {
+const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
   // Loading state
   if (!result && !isAnalyzing) {
     return (
@@ -545,48 +544,6 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing, history }) => {
         </div>
       </div>
 
-      {/* ── History Panel ── */}
-      {history && history.length > 0 && (
-        <div className="history-panel">
-          <div className="history-panel-header">
-            <h3>📋 Session History</h3>
-            <span className="history-count">{history.length} card{history.length !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="history-grid">
-            {history.map((entry, idx) => {
-              const entryCard = (entry as any)?.card_info || {};
-              const entryAuction = (entry as any)?.auction_info || {};
-              const entryRoi = (entry as any)?.roi_analysis || {};
-              const entrySignal: string = entryRoi?.signal || 'GRAY';
-              const entryRec: string = entryRoi?.recommendation || 'UNKNOWN';
-              const signalColor = SIGNAL_COLORS[entrySignal] || SIGNAL_COLORS.GRAY;
-              return (
-                <div
-                  key={idx}
-                  className="history-item"
-                  style={{ borderLeft: `4px solid ${signalColor}` }}
-                >
-                  <div className="history-item-top">
-                    <span className="history-signal-dot" style={{ backgroundColor: signalColor }} />
-                    <span className="history-player">
-                      {entryCard?.player_name || 'Unknown'}
-                    </span>
-                  </div>
-                  <div className="history-meta">
-                    {entryCard?.grade && <span>{entryCard.grade}</span>}
-                    {entryAuction?.current_bid > 0 && (
-                      <span>{formatCurrency(entryAuction.current_bid)}</span>
-                    )}
-                  </div>
-                  <div className="history-rec" style={{ color: signalColor }}>
-                    {entryRec.replace('_', ' ')}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 absl-py==2.0.0
-paddlepaddle==2.6.1
+paddlepaddle>=2.6.2
 paddleocr==2.7.3
 rapidfuzz==3.6.1
 openai-whisper==20231117

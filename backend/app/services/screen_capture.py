@@ -9,7 +9,7 @@ from typing import Dict, Optional, Callable, Any
 import cv2
 import numpy as np
 import mss
-from PIL import Image, ImageTk
+from PIL import Image
 
 class ScreenCaptureService:
     def __init__(self):

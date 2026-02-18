@@ -6,14 +6,13 @@ export interface StreamViewerProps {
   regionSelected: boolean;
 }
 
-const StreamViewer: React.FC<StreamViewerProps> = ({ frameData }) => {
+const StreamViewer: React.FC<StreamViewerProps> = ({ frameData, isAnalyzing, regionSelected }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   useEffect(() => {
     if (frameData && canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      
       if (ctx) {
         const img = new Image();
         img.onload = () => {
@@ -25,17 +24,37 @@ const StreamViewer: React.FC<StreamViewerProps> = ({ frameData }) => {
       }
     }
   }, [frameData]);
-  
+
+  if (!frameData) {
+    let icon: string;
+    let message: string;
+
+    if (isAnalyzing) {
+      icon = '⏳';
+      message = 'Waiting for frames...';
+    } else if (regionSelected) {
+      icon = '▶';
+      message = 'Click Start Analysis to begin streaming';
+    } else {
+      icon = '📍';
+      message = 'Select a region to get started';
+    }
+
+    return (
+      <div className="stream-viewer">
+        <div className="stream-placeholder">
+          <span className="stream-placeholder-icon">{icon}</span>
+          <p className="stream-placeholder-text">{message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="stream-viewer">
-      <h3>Live Stream</h3>
-      <canvas 
-        ref={canvasRef} 
-        style={{ 
-          maxWidth: '100%', 
-          border: '2px solid #ccc',
-          borderRadius: '8px'
-        }}
+      <canvas
+        ref={canvasRef}
+        style={{ maxWidth: '100%', borderRadius: '8px' }}
       />
     </div>
   );

@@ -31,9 +31,9 @@ class SocketService {
   }
 
   // Screen capture region selection
-  selectRegion(): void {
+  selectRegion(region?: { top: number; left: number; width: number; height: number }): void {
     if (this.socket) {
-      this.socket.emit('select_region');
+      this.socket.emit('select_region', region ?? {});
     }
   }
 

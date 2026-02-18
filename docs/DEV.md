@@ -1,92 +1,81 @@
-# Joshinator — Dev Notes & Running the App
+# Joshinator — Dev Reference
+
+> Just need to get running? See [STARTUP.md](STARTUP.md).
+
+---
 
 ## First-Time Setup
 
-Run the setup script once from the project root — it handles everything:
+Run the setup script once from the project root:
 
 ```bash
 bash setup-demo.sh
 ```
 
-The script:
+The script: installs portaudio, creates `backend/venv`, installs all Python deps (handles macOS ARM PaddlePaddle), verifies services, creates `backend/.env`, runs `npm install`, and writes `run.sh` / `run_backend.sh` / `run_frontend.sh`.
 
-- Installs `portaudio` via Homebrew if missing (required for Whisper audio)
-- Finds Python 3.10+ and creates `backend/venv`
-- Installs all Python dependencies (handles macOS ARM PaddlePaddle separately)
-- Verifies each critical service (PaddleOCR, EasyOCR, Whisper, sounddevice, etc.)
-- Creates `backend/.env` from `.env.example` if it doesn't exist
-- Runs `npm install` in the frontend
-- Writes `run.sh`, `run_backend.sh`, `run_frontend.sh` to the project root
+After it finishes, **edit `backend/.env`** and add your API keys.
 
-After it finishes, **edit `backend/.env`** and add your API keys before starting.
-
-### Manual Setup (if you prefer)
+### Manual Setup
 
 ```bash
-# macOS: audio capture dependency
 brew install portaudio
 
-# Backend
 cd backend
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # then fill in API keys
 
-# Frontend
-cd ../frontend
-npm install
+cd ../frontend && npm install
 ```
 
 ---
 
 ## Running the App
 
-Both servers must be running simultaneously. Open two terminal tabs.
-
-**Tab 1 — Backend** (port 3001):
 ```bash
-cd backend
-source venv/bin/activate
+# Backend (port 3001) — Tab 1
+cd backend && source venv/bin/activate
 uvicorn app.main:socket_app --host 0.0.0.0 --port 3001 --reload
+
+# Frontend (port 3000) — Tab 2
+cd frontend && npm start
+
+# Or both at once
+./run.sh
 ```
 
-**Tab 2 — Frontend** (port 3000):
-```bash
-cd frontend
-npm start
-```
-
-Open `http://localhost:3000` in your browser.
-
-> **Important**: The uvicorn target must be `app.main:socket_app`, not `app.main:app`.
-> The Socket.IO server is only in the ASGI chain when using `socket_app`.
+> **Important**: target must be `app.main:socket_app`, not `app.main:app`.
 
 ---
 
 ## Using the App
 
-1. Make sure Whatsnot is open in your browser with a live auction visible
-2. In the analyzer UI, click **Select Region** — this uses the default region (800×600 at 100,100 in headless mode); modify `screen_capture.py`'s `default_region` to match your browser window
+1. Open Whatsnot in your browser with a live auction visible
+2. Click **Select Region** — a panel expands with:
+   - **Preset buttons**: "Whatsnot Browser" (1280×720 below browser toolbar), "Full Screen 1080p", "Full Screen 1440p"
+   - **Coordinate inputs**: Top / Left / Width / Height — fine-tune to match your exact window position
+   - Click **Apply** to send the coordinates to the backend. The button shows "Region ✓".
 3. Click **Start Analysis**
-4. The signal banner will show GRAY until a card is recognized, then flip to GREEN/YELLOW/RED
+4. The signal banner starts GRAY and flips to GREEN / YELLOW / RED once a card is recognized and priced
+
+> **Finding your coordinates**: Position the Whatsnot window where you want it, then use a preset as a starting point and tweak Top/Left to align with where your browser chrome ends.
 
 ---
 
-## Environment Variables
-
-All variables live in `backend/.env`. Unset optional variables gracefully degrade.
+## Environment Variables (`backend/.env`)
 
 | Variable | Required | Default | Notes |
 |---|---|---|---|
-| `ANTHROPIC_API_KEY` | Optional | — | Must start with `sk-ant-`. Without it, Claude analysis is skipped |
+| `ANTHROPIC_API_KEY` | Optional | — | Without it, Claude analysis is skipped |
 | `EBAY_APP_ID` | Required for pricing | — | From eBay Developer account |
 | `EBAY_DEV_ID` | Required for pricing | — | From eBay Developer account |
 | `EBAY_CERT_ID` | Required for pricing | — | From eBay Developer account |
 | `CLAUDE_MODEL` | Optional | `claude-sonnet-4-20250514` | Any Claude model ID |
 | `CAPTURE_FPS` | Optional | `5` | Frames per second to capture |
 | `PROCESS_EVERY_N_FRAMES` | Optional | `3` | Pipeline runs on every Nth frame |
-| `OCR_CONFIDENCE_THRESHOLD` | Optional | `0.7` | OCR minimum confidence to trust |
+| `OCR_CONFIDENCE_THRESHOLD` | Optional | `0.7` | Minimum OCR confidence to trust |
 | `PRICING_CACHE_DB` | Optional | `pricing_cache.db` | Path for pricing SQLite cache |
 | `PRICING_CACHE_TTL_HOURS` | Optional | `3` | Hours before cache entry expires |
 | `MIN_COMPS_FOR_SIGNAL` | Optional | `3` | Minimum eBay sales needed for a color signal |
@@ -96,13 +85,10 @@ All variables live in `backend/.env`. Unset optional variables gracefully degrad
 
 ## Verifying Services on Startup
 
-Watch backend logs after `uvicorn` starts:
-
 ```
-✅ PaddleOCR loaded successfully          # or EasyOCR, or mock warning
-INFO  Whisper model loaded (base)         # audio available
-INFO  SQLite cache initialized            # pricing_cache.db created
-INFO  SessionLogService initialized       # session_log.db created
+✅ EasyOCR loaded successfully (PaddleOCR unavailable)
+INFO  SQLite cache initialized
+INFO  SessionLogService initialized
 ```
 
 If PaddleOCR fails on macOS Apple Silicon:
@@ -117,14 +103,14 @@ pip install paddlepaddle -f https://www.paddlepaddle.org.cn/whl/mac/cpu/stable.h
 ```bash
 # Backend
 cd backend && source venv/bin/activate
-pytest                          # all tests
-pytest test_claude.py -v        # single file
+pytest                                          # all tests
+pytest test_claude.py -v                        # single file
 
 # Frontend
 cd frontend
-npm test                        # interactive watch mode
-npm test -- --watchAll=false    # single run (CI)
-npm test -- --testPathPattern=App.test  # single file
+npm test                                        # interactive watch mode
+npm test -- --watchAll=false                    # single run
+npm test -- --testPathPattern=App.test          # single file
 ```
 
 ---
@@ -132,14 +118,17 @@ npm test -- --testPathPattern=App.test  # single file
 ## Inspecting the SQLite Databases
 
 ```bash
-# Pricing cache — what cards have been looked up
-sqlite3 backend/pricing_cache.db "SELECT cache_key, query, created_at FROM pricing_cache;"
+# Pricing cache
+sqlite3 backend/pricing_cache.db \
+  "SELECT cache_key, query, created_at FROM pricing_cache;"
 
-# Session log — recent analysis results
-sqlite3 backend/session_log.db "SELECT session_id, created_at FROM analysis_log ORDER BY created_at DESC LIMIT 20;"
+# Session log — recent results
+sqlite3 backend/session_log.db \
+  "SELECT session_id, created_at FROM analysis_log ORDER BY created_at DESC LIMIT 20;"
 
 # Count per session
-sqlite3 backend/session_log.db "SELECT session_id, count(*) FROM analysis_log GROUP BY session_id;"
+sqlite3 backend/session_log.db \
+  "SELECT session_id, count(*) FROM analysis_log GROUP BY session_id;"
 ```
 
 ---
@@ -155,37 +144,18 @@ sqlite3 backend/session_log.db "SELECT session_id, count(*) FROM analysis_log GR
 
 ---
 
-## Adjusting the Capture Region
+## VOD Replay
 
-In headless mode (default), `select_capture_region()` returns the `default_region` at (100, 100) 800×600. To point it at your actual Whatsnot window, either:
+Test the pipeline against a recorded stream without a live auction:
 
-**Option A** — Edit the default in code:
-```python
-# backend/app/services/screen_capture.py
-self.default_region = {"top": 200, "left": 50, "width": 1280, "height": 720}
-```
+1. Record your screen during a Whatsnot session (QuickTime, OBS, etc.)
+2. Start backend + frontend normally
+3. Click **🎬 VOD** in the UI to toggle VOD mode
+4. Paste the full path to your `.mp4`
+5. Click **Load** — UI shows duration and frame count
+6. Click **▶ Replay** — full pipeline runs on video frames, results saved to `session_log.db`
 
-**Option B** — Use the helper at the bottom of `screen_capture.py`:
-```python
-setup_whatsnot_region()   # 1200×800 at (100, 50)
-setup_fullscreen_region() # full primary monitor
-```
-
-**Option C** — Call `set_custom_region()` directly via the Socket.IO API or a quick Python REPL.
-
----
-
-## VOD Replay Workflow
-
-Use this to test the pipeline against a recorded Whatsnot stream without a live auction:
-
-1. Record your screen during a Whatsnot session to `.mp4` (QuickTime, OBS, etc.)
-2. Start the analyzer normally (backend + frontend)
-3. Click **🎬 VOD** in the UI header to toggle VOD mode
-4. Paste the full path to your `.mp4` file
-5. Click **Load** — the UI shows duration and frame count if the file is valid
-6. Click **▶ Replay** — the same full pipeline runs on the video frames
-7. Results appear in the analysis panel and are saved to `session_log.db`
+> If the file won't load: `ffmpeg -i input.mp4 -c:v libx264 output.mp4`
 
 ---
 
@@ -193,9 +163,12 @@ Use this to test the pipeline against a recorded Whatsnot stream without a live 
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
-| `connect_error` in browser | Backend not running on port 3001 | Start uvicorn with `socket_app` target |
-| Signal always GRAY | eBay keys missing or card not detected | Check `EBAY_*` env vars; verify region covers card title |
-| No audio transcription | `openai-whisper` or `sounddevice` not installed | `pip install openai-whisper sounddevice`; `brew install portaudio` |
-| PaddleOCR import error | Wrong platform build | Try the URL-based pip install for macOS CPU above |
-| `File is not recognized as a video` in VOD | Unsupported codec | Re-encode with `ffmpeg -i input.mp4 -c:v libx264 output.mp4` |
-| Pricing always returns 0 results | Fuzzy threshold too high or bad query | Lower `FUZZY_MATCH_THRESHOLD` to 50 and check `query_used` in payload |
+| `ModuleNotFoundError: No module named 'rapidfuzz'` | `pip install -r requirements.txt` aborted early due to a paddlepaddle version error, leaving deps uninstalled | `pip install rapidfuzz anthropic` then re-run `pip install -r requirements.txt` |
+| `paddlepaddle==X.Y.Z` not found | Pinned version yanked from PyPI | `requirements.txt` now uses `>=2.6.2`; if on older checkout update the pin manually |
+| `No module named '_tkinter'` | Stale `from PIL import Image, ImageTk` import in `screen_capture.py` | Already fixed — change to `from PIL import Image` if on an older checkout |
+| `connect_error` in browser | Backend not running or wrong uvicorn target | Start with `app.main:socket_app`, not `app.main:app` |
+| `npm run dev` fails | No `dev` script exists | Use `npm start` |
+| `RpcIpcMessagePortClosedError` in frontend | TypeScript checker memory warning from CRA | Non-fatal — dev server still starts |
+| Signal always GRAY | eBay keys missing, or capture region misses card title | Check `EBAY_*` in `.env`; adjust region coordinates in the Select Region panel |
+| No audio transcription | Whisper or sounddevice not installed | `pip install openai-whisper sounddevice`; `brew install portaudio` |
+| Pricing returns 0 results | Fuzzy threshold too high or bad query | Lower `FUZZY_MATCH_THRESHOLD` to 50; check `query_used` in the analysis payload |
