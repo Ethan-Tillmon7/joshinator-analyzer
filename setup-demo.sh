@@ -1,232 +1,326 @@
-#!/bin/bash
-# Complete setup script for Joshinator Analyzer
+#!/usr/bin/env bash
+# =============================================================================
+# Joshinator — Setup Script
+# Run once from the project root: bash setup-demo.sh
+# =============================================================================
+set -euo pipefail
 
-echo "🃏 Setting up Joshinator Analyzer..."
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$REPO_DIR/backend"
+FRONTEND_DIR="$REPO_DIR/frontend"
+VENV_DIR="$BACKEND_DIR/venv"
 
-# Check if we're in the right directory
-if [ ! -f "package.json" ] && [ ! -d "backend" ]; then
-    echo "❌ Please run this script from the project root directory"
-    exit 1
-fi
+# ── Colours ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
-# Step 1: Fix Backend Dependencies
-echo ""
-echo "🐍 Setting up Backend..."
-cd backend
+info()    { echo -e "${CYAN}▸ $*${RESET}"; }
+success() { echo -e "${GREEN}✔ $*${RESET}"; }
+warn()    { echo -e "${YELLOW}⚠  $*${RESET}"; }
+error()   { echo -e "${RED}✖ $*${RESET}" >&2; exit 1; }
+header()  { echo -e "\n${BOLD}── $* ──────────────────────────────────────────${RESET}"; }
 
-# Activate virtual environment
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
-fi
+# ── Guard: must run from repo root ───────────────────────────────────────────
+[[ -d "$BACKEND_DIR" && -d "$FRONTEND_DIR" ]] \
+  || error "Run this script from the project root (where backend/ and frontend/ live)"
 
-echo "Activating virtual environment..."
-source venv/bin/activate
+# =============================================================================
+# 1. PREREQUISITES
+# =============================================================================
+header "Checking prerequisites"
 
-# Check if requirements.txt exists
-if [ ! -f "requirements.txt" ]; then
-    if [ -f "app/requirements.txt" ]; then
-        echo "Moving requirements.txt to correct location..."
-        mv app/requirements.txt requirements.txt
+# macOS portaudio (required by sounddevice / pyaudio for Whisper audio)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  if ! brew list portaudio &>/dev/null 2>&1; then
+    if command -v brew &>/dev/null; then
+      info "Installing portaudio via Homebrew (required for audio capture)..."
+      brew install portaudio
     else
-        echo "❌ No requirements.txt found!"
-        exit 1
+      warn "Homebrew not found. Install portaudio manually: brew install portaudio"
+      warn "Audio capture (Whisper) will be disabled without it."
     fi
+  else
+    success "portaudio already installed"
+  fi
 fi
 
-# Install dependencies
-echo "📦 Installing Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+# Python — prefer 3.11, accept 3.10+
+PYTHON=""
+for candidate in python3.11 python3.12 python3.10 python3; do
+  if command -v "$candidate" &>/dev/null; then
+    ver=$("$candidate" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    major=$(echo "$ver" | cut -d. -f1)
+    minor=$(echo "$ver" | cut -d. -f2)
+    if [[ "$major" -eq 3 && "$minor" -ge 10 ]]; then
+      PYTHON="$candidate"
+      success "Python $ver found ($candidate)"
+      break
+    fi
+  fi
+done
+[[ -n "$PYTHON" ]] || error "Python 3.10+ required. Install via: brew install python@3.11"
 
-# Verify key packages
-echo "🔍 Verifying installations..."
-if python -c "import uvicorn; print('✅ uvicorn installed')" 2>/dev/null; then
-    echo "✅ uvicorn: OK"
+# Node.js 18+
+if command -v node &>/dev/null; then
+  node_ver=$(node -e "process.stdout.write(process.versions.node)")
+  node_major=$(echo "$node_ver" | cut -d. -f1)
+  if [[ "$node_major" -ge 18 ]]; then
+    success "Node.js $node_ver found"
+  else
+    warn "Node.js $node_ver found — 18+ recommended. Consider: brew install node"
+  fi
 else
-    echo "❌ uvicorn: FAILED"
-    pip install uvicorn[standard]
+  error "Node.js not found. Install: brew install node"
 fi
 
-if python -c "import easyocr; print('✅ easyocr installed')" 2>/dev/null; then
-    echo "✅ easyocr: OK"
+# npm
+command -v npm &>/dev/null || error "npm not found (should come with Node.js)"
+
+# =============================================================================
+# 2. BACKEND PYTHON ENVIRONMENT
+# =============================================================================
+header "Setting up Python backend"
+
+# Create venv if missing
+if [[ ! -d "$VENV_DIR" ]]; then
+  info "Creating Python virtual environment at backend/venv..."
+  "$PYTHON" -m venv "$VENV_DIR"
+fi
+
+VENV_PYTHON="$VENV_DIR/bin/python"
+VENV_PIP="$VENV_DIR/bin/pip"
+
+info "Upgrading pip..."
+"$VENV_PIP" install --quiet --upgrade pip
+
+# PaddleOCR on macOS Apple Silicon needs a special index URL
+if [[ "$OSTYPE" == "darwin"* ]] && [[ "$(uname -m)" == "arm64" ]]; then
+  if ! "$VENV_PYTHON" -c "import paddle" &>/dev/null 2>&1; then
+    info "Installing PaddlePaddle for macOS ARM (CPU)..."
+    "$VENV_PIP" install --quiet paddlepaddle \
+      -f https://www.paddlepaddle.org.cn/whl/mac/cpu/stable.html \
+      || warn "PaddlePaddle ARM install failed — will fall back to EasyOCR"
+  fi
+fi
+
+info "Installing Python dependencies (this may take several minutes on first run)..."
+"$VENV_PIP" install --quiet -r "$BACKEND_DIR/requirements.txt"
+success "Python dependencies installed"
+
+# =============================================================================
+# 3. VERIFY CRITICAL PYTHON SERVICES
+# =============================================================================
+header "Verifying backend services"
+
+check_py() {
+  local label="$1"; local module="$2"
+  if "$VENV_PYTHON" -c "import $module" &>/dev/null 2>&1; then
+    success "$label"
+  else
+    warn "$label — not available (optional, will degrade gracefully)"
+  fi
+}
+
+check_py "FastAPI / uvicorn"        "uvicorn"
+check_py "Socket.IO"                "socketio"
+check_py "PaddleOCR (primary OCR)"  "paddleocr"
+check_py "EasyOCR (fallback OCR)"   "easyocr"
+check_py "Whisper (audio)"          "whisper"
+check_py "sounddevice (audio)"      "sounddevice"
+check_py "rapidfuzz (pricing)"      "rapidfuzz"
+check_py "Anthropic Claude SDK"     "anthropic"
+check_py "mss (screen capture)"     "mss"
+check_py "OpenCV"                   "cv2"
+
+# Verify the app itself imports cleanly
+info "Checking app import..."
+if PYTHONPATH="$BACKEND_DIR" "$VENV_PYTHON" -c "from app.main import socket_app" &>/dev/null 2>&1; then
+  success "Backend app imports successfully"
 else
-    echo "⚠️  easyocr: Installing (this may take a few minutes)..."
-    pip install easyocr
+  warn "Backend app import had issues — check logs when starting the server"
 fi
 
-if python -c "import mss; print('✅ mss installed')" 2>/dev/null; then
-    echo "✅ mss: OK"
-else
-    echo "Installing mss..."
-    pip install mss
-fi
+# =============================================================================
+# 4. ENVIRONMENT FILE
+# =============================================================================
+header "Environment configuration"
 
-# Test backend setup
-echo ""
-echo "🧪 Testing backend setup..."
-cd ..
+ENV_FILE="$BACKEND_DIR/.env"
+ENV_EXAMPLE="$BACKEND_DIR/.env.example"
 
-# Create test script
-cat > test_backend.py << 'EOF'
-#!/usr/bin/env python3
-import sys
-sys.path.append('backend')
-
-try:
-    from backend.app.services.screen_capture import screen_capture
-    print("✅ Screen capture service: OK")
-except Exception as e:
-    print(f"❌ Screen capture service: {e}")
-
-try:
-    from backend.app.services.ocr_service import ocr_service
-    result = ocr_service.extract_text_easyocr("test")
-    print("✅ OCR service: OK")
-except Exception as e:
-    print(f"❌ OCR service: {e}")
-
-try:
-    import uvicorn
-    print("✅ Uvicorn: OK")
-except Exception as e:
-    print(f"❌ Uvicorn: {e}")
-
-print("🎯 Backend test complete!")
-EOF
-
-cd backend
-source venv/bin/activate
-python ../test_backend.py
-cd ..
-
-# Step 2: Fix Frontend Dependencies
-echo ""
-echo "⚛️ Setting up Frontend..."
-cd frontend
-
-# Check if package.json exists
-if [ ! -f "package.json" ]; then
-    echo "❌ No package.json found in frontend directory!"
-    exit 1
-fi
-
-# Install dependencies
-echo "📦 Installing npm dependencies..."
-npm install
-
-# Fix socket.io-client version if needed
-echo "🔧 Checking socket.io-client version..."
-SOCKET_VERSION=$(npm list socket.io-client --depth=0 | grep socket.io-client | cut -d'@' -f2)
-echo "Current socket.io-client version: $SOCKET_VERSION"
-
-# Install latest compatible version
-npm install socket.io-client@latest
-
-# Test frontend setup
-echo ""
-echo "🧪 Testing frontend setup..."
-if npm run build > /dev/null 2>&1; then
-    echo "✅ Frontend build: OK"
-else
-    echo "⚠️  Frontend build: Issues detected (will try to fix)"
-fi
-
-cd ..
-
-# Step 3: Create run scripts
-echo ""
-echo "📜 Creating run scripts..."
-
-# Backend run script
-cat > run_backend.sh << 'EOF'
-#!/bin/bash
-echo "🚀 Starting Joshinator Analyzer Backend..."
-cd backend
-source venv/bin/activate
-
-# Check if .env exists
-if [ ! -f ".env" ]; then
-    echo "⚠️  Creating .env file from example..."
-    if [ -f ".env.example" ]; then
-        cp .env.example .env
-    elif [ -f "app/.env.example" ]; then
-        cp app/.env.example .env
-    else
-        cat > .env << 'ENVEOF'
-# eBay API Credentials (get from developer.ebay.com)
+if [[ ! -f "$ENV_FILE" ]]; then
+  if [[ -f "$ENV_EXAMPLE" ]]; then
+    cp "$ENV_EXAMPLE" "$ENV_FILE"
+    success "Created backend/.env from .env.example"
+  else
+    cat > "$ENV_FILE" <<'ENVEOF'
+# eBay API Credentials (developer.ebay.com)
 EBAY_APP_ID=your_ebay_app_id_here
 EBAY_DEV_ID=your_ebay_dev_id_here
 EBAY_CERT_ID=your_ebay_cert_id_here
 
-# Database
-DATABASE_URL=sqlite:///./sports_cards.db
-
-# OCR Settings
-OCR_CONFIDENCE_THRESHOLD=0.7
+# Anthropic Claude API
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+CLAUDE_MODEL=claude-sonnet-4-20250514
+CLAUDE_MAX_TOKENS=4096
 
 # Screen Capture
 CAPTURE_FPS=5
 PROCESS_EVERY_N_FRAMES=3
+OCR_CONFIDENCE_THRESHOLD=0.7
+
+# Pricing Cache
+PRICING_CACHE_DB=pricing_cache.db
+PRICING_CACHE_TTL_HOURS=3
+MIN_COMPS_FOR_SIGNAL=3
+FUZZY_MATCH_THRESHOLD=70
 ENVEOF
-    fi
-    echo "📝 Please edit backend/.env with your API keys"
+    success "Created backend/.env with defaults"
+  fi
+  echo ""
+  echo -e "${YELLOW}  ┌──────────────────────────────────────────────────────────────┐${RESET}"
+  echo -e "${YELLOW}  │  Edit backend/.env and add your API keys before running:     │${RESET}"
+  echo -e "${YELLOW}  │    • ANTHROPIC_API_KEY  — from console.anthropic.com        │${RESET}"
+  echo -e "${YELLOW}  │    • EBAY_APP_ID etc.   — from developer.ebay.com           │${RESET}"
+  echo -e "${YELLOW}  └──────────────────────────────────────────────────────────────┘${RESET}"
+  echo ""
+else
+  success "backend/.env already exists"
+  # Warn about placeholder values still in the file
+  if grep -q "your_.*_here" "$ENV_FILE" 2>/dev/null; then
+    warn "backend/.env still has placeholder values — fill in your API keys"
+  fi
 fi
 
-echo "🌐 Starting server on http://localhost:3001"
-python3 -m uvicorn app.main:socket_app --reload --host 0.0.0.0 --port 3001
+# =============================================================================
+# 5. FRONTEND
+# =============================================================================
+header "Setting up frontend"
+
+info "Installing npm dependencies..."
+(cd "$FRONTEND_DIR" && npm install --silent)
+success "Frontend dependencies installed"
+
+# =============================================================================
+# 6. WRITE RUN SCRIPTS
+# =============================================================================
+header "Writing run scripts"
+
+# ── run_backend.sh ──────────────────────────────────────────────────────────
+cat > "$REPO_DIR/run_backend.sh" <<'EOF'
+#!/usr/bin/env bash
+# Start the Joshinator backend (port 3001)
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$REPO_DIR/backend/venv"
+
+[[ -d "$VENV_DIR" ]] \
+  || { echo "Run setup-demo.sh first to install dependencies."; exit 1; }
+
+source "$VENV_DIR/bin/activate"
+cd "$REPO_DIR/backend"
+
+echo "▸ Backend starting on http://localhost:3001"
+exec uvicorn app.main:socket_app --host 0.0.0.0 --port 3001 --reload
 EOF
+chmod +x "$REPO_DIR/run_backend.sh"
 
-# Frontend run script
-cat > run_frontend.sh << 'EOF'
-#!/bin/bash
-echo "🚀 Starting Joshinator Analyzer Frontend..."
-cd frontend
-echo "🌐 Starting development server on http://localhost:3000"
-npm start
+# ── run_frontend.sh ──────────────────────────────────────────────────────────
+cat > "$REPO_DIR/run_frontend.sh" <<'EOF'
+#!/usr/bin/env bash
+# Start the Joshinator frontend (port 3000)
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+[[ -d "$REPO_DIR/frontend/node_modules" ]] \
+  || { echo "Run setup-demo.sh first to install dependencies."; exit 1; }
+
+cd "$REPO_DIR/frontend"
+echo "▸ Frontend starting on http://localhost:3000"
+exec npm start
 EOF
+chmod +x "$REPO_DIR/run_frontend.sh"
 
-# Make scripts executable
-chmod +x run_backend.sh
-chmod +x run_frontend.sh
+# ── run.sh — launch both together ────────────────────────────────────────────
+cat > "$REPO_DIR/run.sh" <<'EOF'
+#!/usr/bin/env bash
+# Launch backend + frontend together.
+# Uses tmux split-pane if available, otherwise runs both in the background
+# and tails combined output to the terminal.
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Step 4: Test complete setup
-echo ""
-echo "🧪 Testing complete setup..."
+stop_all() {
+  echo ""
+  echo "Stopping servers..."
+  kill "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+  wait "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+}
 
-# Test backend startup (brief)
-echo "Testing backend startup..."
-cd backend
-source venv/bin/activate
-timeout 10s python3 -c "
-import sys
-sys.path.append('.')
-from app.main import socket_app
-print('✅ Backend imports successful')
-" || echo "⚠️  Backend startup test timed out (normal)"
+# ── tmux: nicest experience ───────────────────────────────────────────────────
+if command -v tmux &>/dev/null && [[ -z "${TMUX:-}" ]]; then
+  SESSION="joshinator"
+  tmux new-session -d -s "$SESSION" -x 220 -y 50 \
+    "bash '$REPO_DIR/run_backend.sh'; read" 2>/dev/null || true
+  tmux split-window -h -t "$SESSION" \
+    "sleep 2 && bash '$REPO_DIR/run_frontend.sh'; read" 2>/dev/null || true
+  tmux select-pane -t "$SESSION:0.0"
+  echo "▸ Launching in tmux session '$SESSION'"
+  echo "  Attach: tmux attach -t $SESSION"
+  echo "  Kill:   tmux kill-session -t $SESSION"
+  tmux attach -t "$SESSION"
+  exit 0
+fi
 
-cd ..
+# ── Fallback: background processes + combined log ────────────────────────────
+LOG_BACKEND=$(mktemp /tmp/joshinator-backend.XXXXXX)
+LOG_FRONTEND=$(mktemp /tmp/joshinator-frontend.XXXXXX)
 
-# Cleanup test file
-rm -f test_backend.py
+echo "▸ Starting backend  → log: $LOG_BACKEND"
+bash "$REPO_DIR/run_backend.sh" > "$LOG_BACKEND" 2>&1 &
+BACKEND_PID=$!
+
+echo "▸ Starting frontend → log: $LOG_FRONTEND"
+sleep 2  # give backend a head start
+bash "$REPO_DIR/run_frontend.sh" > "$LOG_FRONTEND" 2>&1 &
+FRONTEND_PID=$!
+
+trap stop_all INT TERM
 
 echo ""
-echo "🎉 Setup Complete!"
+echo "  Backend:  http://localhost:3001"
+echo "  Frontend: http://localhost:3000"
+echo "  Press Ctrl+C to stop both servers."
 echo ""
-echo "📋 Next Steps:"
-echo "1. Start backend:  ./run_backend.sh"
-echo "2. Start frontend: ./run_frontend.sh" 
-echo "3. Open browser:   http://localhost:3000"
+
+# Tail both logs interleaved
+tail -f "$LOG_BACKEND" "$LOG_FRONTEND" &
+TAIL_PID=$!
+
+wait "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+kill "$TAIL_PID" 2>/dev/null || true
+rm -f "$LOG_BACKEND" "$LOG_FRONTEND"
+EOF
+chmod +x "$REPO_DIR/run.sh"
+
+success "run_backend.sh, run_frontend.sh, run.sh written"
+
+# =============================================================================
+# 7. DONE
+# =============================================================================
+header "Setup complete"
+
 echo ""
-echo "🔧 Configuration:"
-echo "- Edit backend/.env for API keys"
-echo "- Backend runs on port 3001"
-echo "- Frontend runs on port 3000"
+echo -e "${GREEN}${BOLD}All done. Here's how to run:${RESET}"
 echo ""
-echo "🎯 Quick Test:"
-echo "  cd backend && source venv/bin/activate && python -c \"from app.services.screen_capture import screen_capture; print('✅ Ready to capture!')\" "
+echo -e "  ${BOLD}Both servers together (recommended):${RESET}"
+echo -e "    ${CYAN}./run.sh${RESET}"
 echo ""
-echo "💡 Tips:"
-echo "- Use screen mirroring to capture mobile Whatsnot streams"
-echo "- Adjust capture region coordinates in screen_capture.py"
-echo "- Check browser console for WebSocket connection status"
+echo -e "  ${BOLD}Individually:${RESET}"
+echo -e "    ${CYAN}./run_backend.sh${RESET}   →  http://localhost:3001"
+echo -e "    ${CYAN}./run_frontend.sh${RESET}  →  http://localhost:3000"
+echo ""
+echo -e "  ${BOLD}Then open:${RESET}  http://localhost:3000"
+echo ""
+
+if grep -q "your_.*_here" "$ENV_FILE" 2>/dev/null; then
+  echo -e "${YELLOW}  ⚠  Remember to fill in your API keys in backend/.env before starting.${RESET}"
+  echo ""
+fi

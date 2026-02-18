@@ -7,7 +7,7 @@ from .api.claude_routes import router as claude_router
 
 
 # Create FastAPI app
-app = FastAPI(title="Sports Card Analyzer API")
+app = FastAPI(title="Joshinator API")
 app.include_router(claude_router)
 
 
@@ -32,7 +32,7 @@ websocket.init_socketio(sio)
 
 @app.get("/")
 async def root():
-    return {"message": "Sports Card Analyzer API", "version": "0.1.0"}
+    return {"message": "Joshinator API", "version": "0.1.0"}
 
 if __name__ == "__main__":
     import uvicorn

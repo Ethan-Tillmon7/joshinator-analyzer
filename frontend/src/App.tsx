@@ -163,7 +163,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <div className="header-content">
-          <h1>🃏 Sports Card Auction Analyzer</h1>
+          <h1>🃏 Joshinator</h1>
           <div className="header-info">
             <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
               <span className="status-indicator">
@@ -381,7 +381,7 @@ function App() {
         {/* Footer with app info */}
         <footer className="app-footer">
           <div className="footer-content">
-            <span>Sports Card Auction Analyzer v1.0</span>
+            <span>Joshinator v1.0</span>
             <span>•</span>
             <span>Real-time OCR & ROI Analysis</span>
             <span>•</span>
