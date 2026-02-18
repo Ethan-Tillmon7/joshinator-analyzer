@@ -29,6 +29,12 @@ class Settings:
     CAPTURE_FPS: int = int(os.getenv("CAPTURE_FPS", "5"))
     PROCESS_EVERY_N_FRAMES: int = int(os.getenv("PROCESS_EVERY_N_FRAMES", "3"))
     
+    # Pricing Cache Settings
+    PRICING_CACHE_DB: str = os.getenv("PRICING_CACHE_DB", "pricing_cache.db")
+    PRICING_CACHE_TTL_HOURS: int = int(os.getenv("PRICING_CACHE_TTL_HOURS", "3"))
+    MIN_COMPS_FOR_SIGNAL: int = int(os.getenv("MIN_COMPS_FOR_SIGNAL", "3"))
+    FUZZY_MATCH_THRESHOLD: int = int(os.getenv("FUZZY_MATCH_THRESHOLD", "70"))
+
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     

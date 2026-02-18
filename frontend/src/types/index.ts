@@ -26,6 +26,8 @@ export interface CardInfo {
   sport: string | null;
   position: string | null;
   team: string | null;
+  ocr_engine?: string;
+  audio_confidence?: number;
 }
 
 export interface OCRResult {
@@ -60,7 +62,8 @@ export interface FairValueRange {
 }
 
 export interface ROIAnalysis {
-  recommendation: 'STRONG_BUY' | 'BUY' | 'WEAK_BUY' | 'WATCH' | 'PASS';
+  recommendation: 'STRONG_BUY' | 'BUY' | 'WEAK_BUY' | 'WATCH' | 'PASS' | 'INSUFFICIENT_DATA' | 'UNKNOWN';
+  signal: 'GREEN' | 'YELLOW' | 'RED' | 'GRAY';
   confidence: number;
   roi_potential: number;
   suggested_max_bid: number;
@@ -70,7 +73,9 @@ export interface ROIAnalysis {
   key_factors: string[];
   risk_factors: string[];
   risk_level: 'low' | 'medium' | 'high';
-  deal_score: number; // 0-100 scale
+  deal_score: number;
+  comp_count: number;
+  insufficient_data_reason: string | null;
 }
 
 export interface PriceData {

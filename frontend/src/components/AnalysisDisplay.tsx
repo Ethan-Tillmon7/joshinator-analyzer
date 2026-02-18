@@ -103,9 +103,15 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing, history }) => {
         text: 'PASS',
         description: 'Overpriced - above market value'
       },
-      'ANALYZING': { 
-        color: '#9e9e9e', 
-        icon: '🔄', 
+      'INSUFFICIENT_DATA': {
+        color: '#9e9e9e',
+        icon: '🔍',
+        text: 'SCANNING',
+        description: 'Not enough market data for a signal'
+      },
+      'ANALYZING': {
+        color: '#9e9e9e',
+        icon: '🔄',
         text: 'ANALYZING',
         description: 'Processing market data...'
       }
@@ -135,8 +141,43 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing, history }) => {
   const recommendation = getRecommendationDetails(roiAnalysis?.recommendation);
   const dealQuality = getDealQualityIndicator(roiAnalysis?.roi_potential);
 
+  const SIGNAL_COLORS: Record<string, string> = {
+    GREEN: '#00C851',
+    YELLOW: '#ffbb33',
+    RED: '#ff4444',
+    GRAY: '#9e9e9e',
+  };
+  const signal: string = roiAnalysis?.signal || 'GRAY';
+  const bannerColor = SIGNAL_COLORS[signal] || SIGNAL_COLORS.GRAY;
+
   return (
     <div className="analysis-display">
+
+      {/* ── Signal Banner ── */}
+      <div
+        className={`signal-banner signal-banner-${signal}`}
+        style={{ backgroundColor: bannerColor }}
+      >
+        <div className="signal-label">
+          {recommendation.icon} {recommendation.text}
+        </div>
+        <div className="signal-subline">
+          <span>{cardInfo?.player_name || '—'}{cardInfo?.grade ? ` · ${cardInfo.grade}` : ''}</span>
+          <span>Bid: {formatCurrency(auctionInfo?.current_bid)}</span>
+          <span>Est: {formatCurrency(roiAnalysis?.fair_value_range?.estimated)}</span>
+          <span>Max Bid: {formatCurrency(roiAnalysis?.suggested_max_bid)}</span>
+          <span>Confidence: {Math.round((roiAnalysis?.confidence || 0) * 100)}%</span>
+        </div>
+        {roiAnalysis?.insufficient_data_reason && (
+          <div className="signal-warning">{roiAnalysis.insufficient_data_reason}</div>
+        )}
+        <div className="confidence-bar-container">
+          <div
+            className="confidence-bar-fill"
+            style={{ width: `${Math.round((roiAnalysis?.confidence || 0) * 100)}%` }}
+          />
+        </div>
+      </div>
       {/* Card Information Section */}
       <div className="analysis-section card-section">
         <div className="section-header">
