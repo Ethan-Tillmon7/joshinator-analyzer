@@ -13,14 +13,13 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
     return (
       <div className="analysis-display">
         <div className="analysis-placeholder">
-          <div className="placeholder-icon">🃏</div>
           <h3>Ready to Analyze Whatsnot Auctions</h3>
           <p>Select a region and start analysis to detect cards and calculate ROI</p>
           <div className="placeholder-features">
-            <div className="feature-item">✨ Real-time OCR card detection</div>
-            <div className="feature-item">💰 Live market data & pricing</div>
-            <div className="feature-item">📊 ROI analysis & recommendations</div>
-            <div className="feature-item">🎯 Deal quality assessment</div>
+            <div className="feature-item">Real-time OCR card detection</div>
+            <div className="feature-item">Live market data & pricing</div>
+            <div className="feature-item">ROI analysis & recommendations</div>
+            <div className="feature-item">Deal quality assessment</div>
           </div>
         </div>
       </div>
@@ -37,10 +36,10 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
           <h3>Analyzing Whatsnot Stream...</h3>
           <p>Detecting cards and fetching market data...</p>
           <div className="loading-steps">
-            <div className="step active">🔍 OCR Processing</div>
-            <div className="step">💾 Card Database Lookup</div>
-            <div className="step">💰 Market Data Retrieval</div>
-            <div className="step">📊 ROI Calculation</div>
+            <div className="step active">OCR Processing</div>
+            <div className="step">Card Database Lookup</div>
+            <div className="step">Market Data Retrieval</div>
+            <div className="step">ROI Calculation</div>
           </div>
         </div>
       </div>
@@ -72,45 +71,45 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
 
   const getRecommendationDetails = (rec: string | undefined) => {
     const recommendations: Record<string, { color: string; icon: string; text: string; description: string }> = {
-      'STRONG_BUY': { 
-        color: '#00C851', 
-        icon: '🚀', 
+      'STRONG_BUY': {
+        color: '#00C851',
+        icon: '',
         text: 'STRONG BUY',
         description: 'Excellent deal - well below market value'
       },
-      'BUY': { 
-        color: '#33b5e5', 
-        icon: '👍', 
+      'BUY': {
+        color: '#33b5e5',
+        icon: '',
         text: 'BUY',
         description: 'Good value - below average market price'
       },
-      'WEAK_BUY': { 
-        color: '#ffbb33', 
-        icon: '⚖️', 
+      'WEAK_BUY': {
+        color: '#ffbb33',
+        icon: '',
         text: 'WEAK BUY',
         description: 'Fair deal - slight upside potential'
       },
-      'WATCH': { 
-        color: '#ff8800', 
-        icon: '👀', 
+      'WATCH': {
+        color: '#ff8800',
+        icon: '',
         text: 'WATCH',
         description: 'Monitor closely - price at market value'
       },
-      'PASS': { 
-        color: '#ff4444', 
-        icon: '❌', 
+      'PASS': {
+        color: '#ff4444',
+        icon: '',
         text: 'PASS',
         description: 'Overpriced - above market value'
       },
       'INSUFFICIENT_DATA': {
         color: '#9e9e9e',
-        icon: '🔍',
+        icon: '',
         text: 'SCANNING',
         description: 'Not enough market data for a signal'
       },
       'ANALYZING': {
         color: '#9e9e9e',
-        icon: '🔄',
+        icon: '',
         text: 'ANALYZING',
         description: 'Processing market data...'
       }
@@ -158,7 +157,7 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
         style={{ backgroundColor: bannerColor }}
       >
         <div className="signal-label">
-          {recommendation.icon} {recommendation.text}
+          {recommendation.text}
         </div>
         <div className="signal-subline">
           <span>{cardInfo?.player_name || '—'}{cardInfo?.grade ? ` · ${cardInfo.grade}` : ''}</span>
@@ -180,7 +179,7 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
       {/* Card Information Section */}
       <div className="analysis-section card-section">
         <div className="section-header">
-          <h3>🃏 Card Detected</h3>
+          <h3>Card Detected</h3>
           <div className="confidence-badge">
             {Math.round((result?.confidence || 0) * 100)}% confident
           </div>
@@ -234,13 +233,13 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
           
           {cardInfo?.rookie && (
             <div className="special-badges">
-              <div className="rookie-badge">🌟 ROOKIE CARD</div>
+              <div className="rookie-badge">ROOKIE CARD</div>
             </div>
           )}
-          
+
           {cardInfo?.auto && (
             <div className="special-badges">
-              <div className="auto-badge">✍️ AUTOGRAPH</div>
+              <div className="auto-badge">AUTOGRAPH</div>
             </div>
           )}
         </div>
@@ -249,7 +248,7 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
       {/* Auction Information Section */}
       <div className="analysis-section auction-section">
         <div className="section-header">
-          <h3>🔨 Live Auction Status</h3>
+          <h3>Live Auction Status</h3>
           <div className="auction-status live">
             <span className="status-dot"></span>
             LIVE
@@ -266,19 +265,19 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
           
           <div className="auction-meta">
             <div className="meta-item">
-              <span className="meta-label">⏱️ Time Left:</span>
+              <span className="meta-label">Time Left:</span>
               <span className="meta-value">
                 {auctionInfo?.time_remaining || 'Unknown'}
               </span>
             </div>
             
             <div className="meta-item">
-              <span className="meta-label">👥 Total Bids:</span>
+              <span className="meta-label">Total Bids:</span>
               <span className="meta-value">{auctionInfo?.bid_count || 0}</span>
             </div>
             
             <div className="meta-item">
-              <span className="meta-label">📈 Bid Activity:</span>
+              <span className="meta-label">Bid Activity:</span>
               <span className="meta-value">
                 {auctionInfo?.bidding_velocity || 'Normal'}
               </span>
@@ -290,7 +289,7 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
       {/* ROI Analysis Section */}
       <div className="analysis-section roi-section">
         <div className="section-header">
-          <h3>💰 Deal Analysis</h3>
+          <h3>Deal Analysis</h3>
           <div className="deal-quality" style={{ color: dealQuality.color }}>
             {dealQuality.text} Deal
           </div>
@@ -304,7 +303,6 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
           }}
         >
           <div className="recommendation-header">
-            <span className="rec-icon">{recommendation.icon}</span>
             <div className="rec-details">
               <div 
                 className="rec-text"
@@ -394,7 +392,7 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
       {pricingData?.prices && pricingData?.prices?.length > 0 && (
         <div className="analysis-section market-section">
           <div className="section-header">
-            <h3>📈 Market Intelligence</h3>
+            <h3>Market Intelligence</h3>
             <div className="data-freshness">
               Updated {marketTrends?.last_updated || 'recently'}
             </div>
@@ -410,7 +408,6 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
                 <div className="stat-trend">
                   {marketTrends?.price_trend && (
                     <span className={`trend ${(marketTrends?.price_trend || 0) > 0 ? 'up' : 'down'}`}>
-                      {(marketTrends?.price_trend || 0) > 0 ? '📈' : '📉'} 
                       {formatPercentage(marketTrends?.price_trend)}
                     </span>
                   )}
@@ -481,19 +478,12 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
       {roiAnalysis?.key_factors && roiAnalysis?.key_factors?.length > 0 && (
         <div className="analysis-section factors-section">
           <div className="section-header">
-            <h3>🔍 Key Decision Factors</h3>
+            <h3>Key Decision Factors</h3>
           </div>
           
           <div className="factors-list">
             {roiAnalysis?.key_factors?.map((factor: string, index: number) => (
               <div key={index} className="factor-item">
-                <span className="factor-icon">
-                  {factor.includes('price') || factor.includes('value') ? '💰' :
-                   factor.includes('grade') || factor.includes('condition') ? '🏆' :
-                   factor.includes('rookie') || factor.includes('auto') ? '⭐' :
-                   factor.includes('market') || factor.includes('trend') ? '📊' :
-                   factor.includes('risk') ? '⚠️' : '📌'}
-                </span>
                 <span className="factor-text">{factor}</span>
               </div>
             ))}
@@ -505,7 +495,7 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
       {roiAnalysis?.risk_factors && (
         <div className="analysis-section risk-section">
           <div className="section-header">
-            <h3>⚠️ Risk Assessment</h3>
+            <h3>Risk Assessment</h3>
             <div className={`risk-level ${roiAnalysis?.risk_level || 'medium'}`}>
               {(roiAnalysis?.risk_level || 'medium').toUpperCase()} RISK
             </div>
@@ -514,7 +504,6 @@ const AnalysisDisplay: React.FC<Props> = ({ result, isAnalyzing }) => {
           <div className="risk-factors">
             {roiAnalysis?.risk_factors?.map((risk: string, index: number) => (
               <div key={index} className="risk-item">
-                <span className="risk-icon">⚠️</span>
                 <span className="risk-text">{risk}</span>
               </div>
             ))}

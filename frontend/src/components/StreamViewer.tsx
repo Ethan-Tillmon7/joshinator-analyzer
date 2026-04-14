@@ -26,24 +26,15 @@ const StreamViewer: React.FC<StreamViewerProps> = ({ frameData, isAnalyzing, reg
   }, [frameData]);
 
   if (!frameData) {
-    let icon: string;
-    let message: string;
-
-    if (isAnalyzing) {
-      icon = '⏳';
-      message = 'Waiting for frames...';
-    } else if (regionSelected) {
-      icon = '▶';
-      message = 'Click Start Analysis to begin streaming';
-    } else {
-      icon = '📍';
-      message = 'Select a region to get started';
-    }
+    const message = isAnalyzing
+      ? 'Waiting for frames...'
+      : regionSelected
+        ? 'Click Start Analysis to begin streaming'
+        : 'Select a region to get started';
 
     return (
       <div className="stream-viewer">
         <div className="stream-placeholder">
-          <span className="stream-placeholder-icon">{icon}</span>
           <p className="stream-placeholder-text">{message}</p>
         </div>
       </div>
