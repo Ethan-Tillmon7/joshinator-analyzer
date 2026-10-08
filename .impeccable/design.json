@@ -1,0 +1,783 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T11:10:37Z",
+  "title": "Design System: Joshinator",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "True Black",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a1a1a1",
+          "#c7c7c7",
+          "#eeeeee"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card Black",
+        "canonical": "#1c1c1e",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242426",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a1a1a4",
+          "#c7c7ca",
+          "#eeeef1"
+        ]
+      },
+      "card-2": {
+        "role": "neutral",
+        "displayName": "Raised",
+        "canonical": "#2c2c2e",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242426",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a1a1a4",
+          "#c7c7c9",
+          "#eeeef1"
+        ]
+      },
+      "card-3": {
+        "role": "neutral",
+        "displayName": "Pressed",
+        "canonical": "#3a3a3c",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242426",
+          "#3f3f41",
+          "#5d5d5f",
+          "#808082",
+          "#a1a1a3",
+          "#c7c7c9",
+          "#eeeef1"
+        ]
+      },
+      "label": {
+        "role": "neutral",
+        "displayName": "Label",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a1a1a1",
+          "#c7c7c7",
+          "#eeeeee"
+        ]
+      },
+      "label-2": {
+        "role": "neutral",
+        "displayName": "Secondary Label",
+        "canonical": "#aeaeb2",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242427",
+          "#3f3f43",
+          "#5d5d61",
+          "#808083",
+          "#a1a1a5",
+          "#c7c7cb",
+          "#eeeef2"
+        ]
+      },
+      "label-3": {
+        "role": "neutral",
+        "displayName": "Tertiary Label",
+        "canonical": "#8e8e93",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#242427",
+          "#3f3f44",
+          "#5d5d62",
+          "#808084",
+          "#a1a1a6",
+          "#c7c7cc",
+          "#eeeef3"
+        ]
+      },
+      "fill": {
+        "role": "neutral",
+        "displayName": "Control Fill",
+        "canonical": "rgb(120 120 128 / 0.24)",
+        "tonalRamp": [
+          "#0b0a10",
+          "#23232a",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a0a0a9",
+          "#c6c6cf",
+          "#ededf7"
+        ]
+      },
+      "fill-strong": {
+        "role": "neutral",
+        "displayName": "Strong Control Fill",
+        "canonical": "rgb(120 120 128 / 0.36)",
+        "tonalRamp": [
+          "#0b0a10",
+          "#23232a",
+          "#3f3f46",
+          "#5d5d64",
+          "#7f7f87",
+          "#a0a0a9",
+          "#c6c6cf",
+          "#ededf7"
+        ]
+      },
+      "separator": {
+        "role": "neutral",
+        "displayName": "Hairline Separator",
+        "canonical": "rgb(84 84 88 / 0.6)",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#242427",
+          "#3f3f43",
+          "#5d5d61",
+          "#808084",
+          "#a1a1a5",
+          "#c7c7cb",
+          "#eeeef3"
+        ]
+      },
+      "material": {
+        "role": "neutral",
+        "displayName": "Thin Material",
+        "canonical": "rgb(18 18 20 / 0.72)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242426",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a1a1a4",
+          "#c7c7ca",
+          "#eeeef1"
+        ]
+      },
+      "material-thick": {
+        "role": "neutral",
+        "displayName": "Thick Material",
+        "canonical": "rgb(30 30 32 / 0.86)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242426",
+          "#3f3f42",
+          "#5d5d60",
+          "#808082",
+          "#a1a1a4",
+          "#c7c7ca",
+          "#eeeef1"
+        ]
+      },
+      "green": {
+        "role": "primary",
+        "displayName": "System Green",
+        "canonical": "#30d158",
+        "tonalRamp": [
+          "#001500",
+          "#003100",
+          "#004f12",
+          "#236f32",
+          "#499354",
+          "#6cb675",
+          "#91dd99",
+          "#b8ffbf"
+        ]
+      },
+      "yellow": {
+        "role": "primary",
+        "displayName": "System Yellow",
+        "canonical": "#ffd60a",
+        "tonalRamp": [
+          "#1b0400",
+          "#371f00",
+          "#543c00",
+          "#735b00",
+          "#977e0d",
+          "#b9a03e",
+          "#e0c666",
+          "#ffee8d"
+        ]
+      },
+      "red": {
+        "role": "primary",
+        "displayName": "System Red",
+        "canonical": "#ff453a",
+        "tonalRamp": [
+          "#2d0000",
+          "#4f0000",
+          "#721d17",
+          "#953e35",
+          "#bd6156",
+          "#e38377",
+          "#ffa99b",
+          "#ffd0c1"
+        ]
+      },
+      "red-ink": {
+        "role": "primary",
+        "displayName": "Coral Red Ink",
+        "canonical": "#ff6961",
+        "tonalRamp": [
+          "#2d0000",
+          "#4f0000",
+          "#721c1b",
+          "#963d38",
+          "#bd615a",
+          "#e3827a",
+          "#ffa89e",
+          "#ffcfc4"
+        ]
+      },
+      "gray-pill": {
+        "role": "primary",
+        "displayName": "No Call Gray",
+        "canonical": "#3a3a3c",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#242426",
+          "#3f3f41",
+          "#5d5d5f",
+          "#808082",
+          "#a1a1a3",
+          "#c7c7c9",
+          "#eeeef1"
+        ]
+      },
+      "on-signal": {
+        "role": "primary",
+        "displayName": "Signal Black",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a1a1a1",
+          "#c7c7c7",
+          "#eeeeee"
+        ]
+      },
+      "focus": {
+        "role": "tertiary",
+        "displayName": "Focus Blue",
+        "canonical": "#0a84ff",
+        "tonalRamp": [
+          "#00003b",
+          "#001f5c",
+          "#043e7d",
+          "#295ea0",
+          "#4c82c6",
+          "#6da4eb",
+          "#92caff",
+          "#b8f2ff"
+        ]
+      },
+      "light-bg": {
+        "role": "neutral",
+        "displayName": "Grouped Gray (light)",
+        "canonical": "#f2f2f7",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#242427",
+          "#3f3f43",
+          "#5d5d61",
+          "#808084",
+          "#a1a1a5",
+          "#c7c7cb",
+          "#eeeef3"
+        ]
+      },
+      "light-card": {
+        "role": "neutral",
+        "displayName": "Card White (light)",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a1a1a1",
+          "#c7c7c7",
+          "#eeeeee"
+        ]
+      },
+      "light-card-3": {
+        "role": "neutral",
+        "displayName": "Pressed (light)",
+        "canonical": "#e5e5ea",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#242427",
+          "#3f3f43",
+          "#5d5d61",
+          "#808084",
+          "#a1a1a6",
+          "#c7c7cc",
+          "#eeeef3"
+        ]
+      },
+      "light-label": {
+        "role": "neutral",
+        "displayName": "Label (light)",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a1a1a1",
+          "#c7c7c7",
+          "#eeeeee"
+        ]
+      },
+      "light-label-2": {
+        "role": "neutral",
+        "displayName": "Secondary Label (light)",
+        "canonical": "#4c4c52",
+        "tonalRamp": [
+          "#0b0b0f",
+          "#232329",
+          "#3f3f45",
+          "#5d5d63",
+          "#7f7f86",
+          "#a1a1a8",
+          "#c6c6ce",
+          "#eeeef5"
+        ]
+      },
+      "light-label-3": {
+        "role": "neutral",
+        "displayName": "Tertiary Label (light)",
+        "canonical": "#6c6c70",
+        "tonalRamp": [
+          "#0b0b0e",
+          "#242427",
+          "#3f3f43",
+          "#5d5d61",
+          "#808084",
+          "#a1a1a5",
+          "#c7c7cb",
+          "#eeeef2"
+        ]
+      },
+      "light-green": {
+        "role": "primary",
+        "displayName": "System Green (light)",
+        "canonical": "#34c759",
+        "tonalRamp": [
+          "#001500",
+          "#003100",
+          "#004f13",
+          "#216f33",
+          "#499355",
+          "#6bb675",
+          "#90dd9a",
+          "#b7ffc0"
+        ]
+      },
+      "light-yellow": {
+        "role": "primary",
+        "displayName": "System Yellow (light)",
+        "canonical": "#ffcc00",
+        "tonalRamp": [
+          "#1d0200",
+          "#3a1d00",
+          "#583a00",
+          "#775900",
+          "#9c7c0b",
+          "#be9e3d",
+          "#e5c465",
+          "#ffec8d"
+        ]
+      },
+      "light-red": {
+        "role": "primary",
+        "displayName": "System Red (light)",
+        "canonical": "#ff3b30",
+        "tonalRamp": [
+          "#2d0000",
+          "#4f0000",
+          "#721d16",
+          "#953e34",
+          "#bd6256",
+          "#e38376",
+          "#ffa99b",
+          "#ffd0c1"
+        ]
+      },
+      "light-green-ink": {
+        "role": "primary",
+        "displayName": "Green Ink (light)",
+        "canonical": "#248a3d",
+        "tonalRamp": [
+          "#001500",
+          "#003100",
+          "#004f13",
+          "#216f33",
+          "#489355",
+          "#6bb675",
+          "#90dd9a",
+          "#b7ffc0"
+        ]
+      },
+      "light-yellow-ink": {
+        "role": "primary",
+        "displayName": "Yellow Ink (light)",
+        "canonical": "#a37e00",
+        "tonalRamp": [
+          "#1f0100",
+          "#3b1b00",
+          "#5a3900",
+          "#7a5800",
+          "#9e7b0b",
+          "#c19d3d",
+          "#e8c365",
+          "#ffea8d"
+        ]
+      },
+      "light-red-ink": {
+        "role": "primary",
+        "displayName": "Red Ink (light)",
+        "canonical": "#d70015",
+        "tonalRamp": [
+          "#2d0000",
+          "#4f0000",
+          "#721c19",
+          "#963e36",
+          "#bd6158",
+          "#e38378",
+          "#ffa89c",
+          "#ffcfc3"
+        ]
+      },
+      "light-focus": {
+        "role": "tertiary",
+        "displayName": "Focus Blue (light)",
+        "canonical": "#007aff",
+        "tonalRamp": [
+          "#00003c",
+          "#001e5c",
+          "#0c3d7d",
+          "#2d5da0",
+          "#5081c7",
+          "#70a3ec",
+          "#95caff",
+          "#bbf1ff"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (MAX)",
+        "purpose": "The MAX bid figure only; steps down by character count."
+      },
+      "verdict": {
+        "displayName": "Verdict",
+        "purpose": "The uppercase word inside the verdict pill."
+      },
+      "title-large": {
+        "displayName": "Title Large",
+        "purpose": "Evidence inspector title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section titles such as This session."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "Bid, Under/Over and Time values in the card footer."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Player, reason line, evidence headings, sheet and setup titles, wordmark."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base text and inputs."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "Buttons, lot-row player, evidence rows."
+      },
+      "subhead": {
+        "displayName": "Subhead",
+        "purpose": "Notes, proof line, captions and details in label-2."
+      },
+      "footnote": {
+        "displayName": "Footnote",
+        "purpose": "Metric labels, status line, set line; Island and lot verdict words at 800 uppercase."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Tags, field labels, axis marker labels, risk badge, footer."
+      },
+      "caption-2": {
+        "displayName": "Caption 2",
+        "purpose": "Axis band words and kbd hints only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float-dark",
+        "value": "0 0.75rem 2rem rgb(0 0 0 / 0.5), 0 0.125rem 0.375rem rgb(0 0 0 / 0.4)",
+        "purpose": "Floating chrome (toolbar Island, setup popover, sheet, toast) in dark mode."
+      },
+      {
+        "name": "float-light",
+        "value": "0 0.75rem 2rem rgb(0 0 0 / 0.14), 0 0.125rem 0.375rem rgb(0 0 0 / 0.08)",
+        "purpose": "Same roles in light mode."
+      },
+      {
+        "name": "segment-lift",
+        "value": "0 0.125rem 0.375rem rgb(0 0 0 / 0.12)",
+        "purpose": "Active segment in the segmented control only."
+      },
+      {
+        "name": "material-thin",
+        "value": "background: rgb(18 18 20 / 0.72); backdrop-filter: blur(24px) saturate(180%)",
+        "purpose": "Scrolled toolbar, fading out through a 1.25rem mask; light: rgb(249 249 251 / 0.78)."
+      },
+      {
+        "name": "material-thick",
+        "value": "background: rgb(30 30 32 / 0.86); backdrop-filter: blur(30px) saturate(180%)",
+        "purpose": "Setup popover (30px) and toast (24px); light: rgb(255 255 255 / 0.88)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "spring-default",
+        "value": "{ type: 'spring', bounce: 0, visualDuration: 0.35 }",
+        "purpose": "Critically damped default for every transition; interruptible."
+      },
+      {
+        "name": "spring-flick",
+        "value": "{ type: 'spring', bounce: 0.2, visualDuration: 0.3 }",
+        "purpose": "Only after a sheet release faster than 500px/s."
+      },
+      {
+        "name": "material-enter",
+        "value": "opacity 0→1, scale 0.96→1, filter blur(8px)→blur(0)",
+        "purpose": "Card, popover, toast and toolbar Island arrive and leave as a material; exits mirror entrances."
+      },
+      {
+        "name": "momentum-projection",
+        "value": "(v/1000) · 0.998 / (1 − 0.998)",
+        "purpose": "Sheet lands on the detent nearest the projected rest point."
+      },
+      {
+        "name": "press",
+        "value": "transform: scale(0.96) 120ms ease-out",
+        "purpose": "Feedback on pointer-down; icon buttons 0.92; removed under reduced motion."
+      },
+      {
+        "name": "state-color",
+        "value": "160ms ease-out (controls), 300ms ease-out (verdict pill fill)",
+        "purpose": "Background and color transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tiny",
+        "value": "22rem"
+      },
+      {
+        "name": "narrow",
+        "value": "27rem"
+      },
+      {
+        "name": "compact",
+        "value": "35rem"
+      },
+      {
+        "name": "wide",
+        "value": "60rem"
+      },
+      {
+        "name": "card-collapse (container)",
+        "value": "19rem"
+      },
+      {
+        "name": "card-tight (container)",
+        "value": "25rem"
+      },
+      {
+        "name": "inspector-two-column (container)",
+        "value": "44rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Label-ink capsule for the one main action (Start, Apply region, Back to live).",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M6 4l14 8-14 8z\"/></svg>Start<kbd class=\"ds-kbd\">S</kbd></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; height: 2.25rem; padding: 0 0.875rem; border: 0; border-radius: 999px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.012em; cursor: pointer; transition: transform 120ms ease-out, background-color 160ms ease-out; background: var(--primary-bg, #ffffff); color: var(--primary-fg, #000000); } .ds-btn-primary:hover { background: color-mix(in srgb, var(--primary-bg, #ffffff) 86%, var(--label-2, #aeaeb2)); } .ds-btn-primary:active { transform: scale(0.96); } .ds-btn-primary:focus-visible { outline: 2px solid var(--focus, #0a84ff); outline-offset: 2px; } .ds-kbd { display: inline-grid; place-items: center; min-width: 1.125rem; height: 1.125rem; padding: 0 0.25rem; margin-left: 0.125rem; border-radius: 0.3125rem; background: color-mix(in srgb, currentColor 14%, transparent); font: 600 0.6875rem/1 system-ui, sans-serif; opacity: 0.75; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Fill-strong capsule for supporting actions (Setup, Retry).",
+      "html": "<button class=\"ds-btn-secondary\">Setup</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; height: 2.25rem; padding: 0 0.875rem; border: 0; border-radius: 999px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.012em; cursor: pointer; transition: transform 120ms ease-out, background-color 160ms ease-out; background: var(--fill-strong, rgb(120 120 128 / 0.36)); color: var(--label, #ffffff); } .ds-btn-secondary:hover { background: color-mix(in srgb, var(--fill-strong, rgb(120 120 128 / 0.36)) 100%, var(--label, #ffffff) 12%); } .ds-btn-secondary:active { transform: scale(0.96); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--focus, #0a84ff); outline-offset: 2px; }"
+    },
+    {
+      "name": "Stop Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Outlined capsule shown in place of Start while watching.",
+      "html": "<button class=\"ds-btn-stop\">Stop</button>",
+      "css": ".ds-btn-stop { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; height: 2.25rem; padding: 0 0.875rem; border: 0; border-radius: 999px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.012em; cursor: pointer; transition: transform 120ms ease-out, background-color 160ms ease-out; background: transparent; color: var(--label, #ffffff); box-shadow: inset 0 0 0 1.5px var(--label, #ffffff); } .ds-btn-stop:hover { background: var(--fill, rgb(120 120 128 / 0.24)); } .ds-btn-stop:active { transform: scale(0.96); } .ds-btn-stop:focus-visible { outline: 2px solid var(--focus, #0a84ff); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field-input",
+      "description": "Borderless fill input with a caption label, used in the setup popover.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Width</span><input class=\"ds-input\" value=\"1280\" inputmode=\"numeric\"></label>",
+      "css": ".ds-field { display: grid; gap: 0.3125rem; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; } .ds-field-label { font-size: 0.75rem; font-weight: 600; color: var(--label-2, #aeaeb2); } .ds-input { height: 2.25rem; padding: 0 0.625rem; border: 0; border-radius: 0.625rem; background: var(--fill, rgb(120 120 128 / 0.24)); color: var(--label, #ffffff); font: 500 1rem system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-input:focus-visible { outline: 2px solid var(--focus, #0a84ff); outline-offset: 0; }"
+    },
+    {
+      "name": "Toolbar Status",
+      "kind": "nav",
+      "refersTo": "",
+      "description": "Centered toolbar status tokens; label when on, tertiary when off.",
+      "html": "<ul class=\"ds-status\"><li class=\"ds-token is-on\">Link</li><li class=\"ds-token is-off\">Mic</li><li class=\"ds-token is-on\">1280×720</li><li class=\"ds-token ds-flag\">Replay</li></ul>",
+      "css": ".ds-status { display: flex; align-items: center; gap: 0.875rem; margin: 0; padding: 0; list-style: none; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; } .ds-token { font-size: 0.8125rem; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-token.is-on { color: var(--label, #ffffff); } .ds-token.is-off { color: var(--label-3, #8e8e93); } .ds-flag { padding: 0.1875rem 0.5rem; border-radius: 999px; background: var(--label, #ffffff); color: var(--bg, #000000); font-size: 0.75rem; font-weight: 700; }"
+    },
+    {
+      "name": "Tags",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Card attribute tags; the grade inverts to a label-ink plate.",
+      "html": "<ul class=\"ds-tags\"><li class=\"ds-tag ds-tag-grade\">PSA 9</li><li class=\"ds-tag\">RC</li><li class=\"ds-tag\">Auto</li></ul>",
+      "css": ".ds-tags { display: flex; gap: 0.3125rem; margin: 0; padding: 0; list-style: none; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; } .ds-tag { padding: 0.125rem 0.4375rem; border-radius: 0.375rem; background: var(--fill, rgb(120 120 128 / 0.24)); color: var(--label, #ffffff); font-size: 0.75rem; font-weight: 600; line-height: 1.3; } .ds-tag-grade { background: var(--label, #ffffff); color: var(--card, #1c1c1e); font-weight: 700; }"
+    },
+    {
+      "name": "Verdict Pills",
+      "kind": "custom",
+      "refersTo": "verdict-pill-buy",
+      "description": "The one saturated object: solid signal fill carrying shape and word. Stale drops the fill and keeps a signal-ink ring.",
+      "html": "<div class=\"ds-pills\"><div class=\"ds-pill ds-buy\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3.75 21 19.75H3Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg><span class=\"ds-word\">Buy</span></div><div class=\"ds-pill ds-watch\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 2.75 21.25 12 12 21.25 2.75 12Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg><span class=\"ds-word\">Watch</span></div><div class=\"ds-pill ds-pass\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 20.25 3 4.25h18Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg><span class=\"ds-word\">Pass</span></div><div class=\"ds-pill ds-gray\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"8.25\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.25\"/></svg><span class=\"ds-word\">No call</span></div><div class=\"ds-pill ds-buy ds-stale\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3.75 21 19.75H3Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg><span class=\"ds-word\">Buy</span></div></div>",
+      "css": ".ds-pills { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.75rem; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; } .ds-pill { display: flex; flex-direction: column; justify-content: space-between; gap: 0.5rem; min-height: 7.75rem; padding: 0.875rem 0.9375rem; border-radius: 1.125rem; color: var(--on-signal, #000000); transition: background-color 300ms ease-out; } .ds-word { font-size: 1.875rem; font-weight: 800; line-height: 0.95; letter-spacing: -0.025em; text-transform: uppercase; white-space: nowrap; } .ds-buy { background: var(--green, #30d158); } .ds-watch { background: var(--yellow, #ffd60a); } .ds-pass { background: var(--red, #ff453a); } .ds-gray { background: var(--gray-pill, #3a3a3c); color: var(--on-gray, #ffffff); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--label, #ffffff) 18%, transparent); } .ds-stale { background: transparent; color: var(--label, #ffffff); box-shadow: inset 0 0 0 2px var(--green-ink, #30d158); } .ds-stale svg { color: var(--green-ink, #30d158); }"
+    },
+    {
+      "name": "Island",
+      "kind": "custom",
+      "refersTo": "island-pill",
+      "description": "Compact verdict capsule (shape, word, MAX, time) used in the toolbar and in a collapsed card.",
+      "html": "<button class=\"ds-island\"><span class=\"ds-island-pill\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3.75 21 19.75H3Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg>BUY</span><span class=\"ds-island-fig\"><span class=\"ds-island-lab\">Max</span>$139</span><span class=\"ds-island-fig ds-island-time\">1:42</span></button>",
+      "css": ".ds-island { display: inline-flex; align-items: center; gap: 0.625rem; padding: 0.25rem 0.75rem 0.25rem 0.25rem; border: 0; border-radius: 999px; background: var(--card, #1c1c1e); color: var(--label, #ffffff); box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 0.5), 0 0.125rem 0.375rem rgb(0 0 0 / 0.4); font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; } .ds-island:focus-visible { outline: 2px solid var(--focus, #0a84ff); outline-offset: 2px; } .ds-island-pill { display: inline-flex; align-items: center; gap: 0.3125rem; height: 1.75rem; padding: 0 0.625rem 0 0.5rem; border-radius: 999px; background: var(--green, #30d158); color: var(--on-signal, #000000); font-size: 0.8125rem; font-weight: 800; text-transform: uppercase; } .ds-island-fig { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; } .ds-island-lab { margin-right: 0.25rem; font-size: 0.6875rem; font-weight: 600; color: var(--label-2, #aeaeb2); } .ds-island-time { color: var(--label-2, #aeaeb2); }"
+    },
+    {
+      "name": "Finished Lot Row",
+      "kind": "card",
+      "refersTo": "lot-row",
+      "description": "Session stack row: signal shape in ink plus word, player and meta, Max over Bid.",
+      "html": "<button class=\"ds-lot\"><span class=\"ds-lot-v\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 2.75 21.25 12 12 21.25 2.75 12Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/></svg><b>Watch</b></span><span class=\"ds-lot-n\"><span class=\"ds-lot-p\">Ronald Acuña Jr.</span><span class=\"ds-lot-m\">PSA 10 · Lot 03 · 6:00 AM</span></span><span class=\"ds-lot-f\"><span><i>Max</i>$171</span><span class=\"ds-sec\"><i>Bid</i>$210</span></span></button>",
+      "css": ".ds-lot { display: grid; grid-template-columns: 5.5rem minmax(0,1fr) auto; align-items: center; gap: 0.75rem; width: 100%; min-height: 3.75rem; padding: 0.625rem 0.875rem; border: 0; border-radius: 1rem; background: var(--card, #1c1c1e); color: var(--label, #ffffff); text-align: left; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; cursor: pointer; transition: background-color 160ms ease-out; } .ds-lot:hover { background: var(--card-2, #2c2c2e); } .ds-lot:active { background: var(--card-3, #3a3a3c); } .ds-lot:focus-visible { outline: 2px solid var(--focus, #0a84ff); outline-offset: 2px; } .ds-lot-v { display: inline-flex; align-items: center; gap: 0.375rem; } .ds-lot-v svg { color: var(--yellow-ink, #ffd60a); } .ds-lot-v b { font-size: 0.8125rem; font-weight: 800; text-transform: uppercase; } .ds-lot-n { display: grid; min-width: 0; } .ds-lot-p { font-size: 0.9375rem; font-weight: 600; } .ds-lot-m { font-size: 0.8125rem; color: var(--label-2, #aeaeb2); } .ds-lot-f { display: grid; justify-items: end; font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; } .ds-lot-f i { font-style: normal; margin-right: 0.25rem; font-size: 0.6875rem; font-weight: 600; color: var(--label-2, #aeaeb2); } .ds-sec { font-size: 0.8125rem; font-weight: 500; color: var(--label-2, #aeaeb2); }"
+    },
+    {
+      "name": "Grouped List",
+      "kind": "card",
+      "refersTo": "grouped-list",
+      "description": "Evidence rows on a 0.875rem group with inset 0.5px hairlines.",
+      "html": "<dl class=\"ds-group\"><div class=\"ds-row\"><dt>Estimated value</dt><dd>$174.38</dd></div><div class=\"ds-row\"><dt>Max bid · 80% of est.</dt><dd>$139.50</dd></div><div class=\"ds-row\"><dt>ROI at current bid</dt><dd>+39.5%</dd></div></dl>",
+      "css": ".ds-group { margin: 0; border-radius: 0.875rem; background: var(--card, #1c1c1e); color: var(--label, #ffffff); font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; } .ds-row { position: relative; display: flex; justify-content: space-between; gap: 1rem; padding: 0.6875rem 0.875rem; font-size: 0.9375rem; line-height: 1.35; } .ds-row + .ds-row::before { content: ''; position: absolute; top: 0; left: 0.875rem; right: 0; border-top: 0.5px solid var(--separator, rgb(84 84 88 / 0.6)); } .ds-row dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Live Game Card",
+    "overview": "Every lot is a live game card, read the way an iOS Live Activity or Apple Sports shows a score. The card identity (player, set line, grade, lot number) is the matchup. The verdict pill and the MAX figure are the score. Bid, headroom and time are the footer. Finished lots stack below as completed game cards, and the evidence opens as a sheet that rises from the card on a narrow screen or sits beside it as an inspector on a wide one. The system is built inside Apple's interface and motion principles, which PRODUCT.md makes binding: system type with optical sizing, translucency only on functional chrome, critically damped springs, and accessibility media queries in every component.\n\nThe surface is dark-first and quiet. It uses system grounds (pure black page, near-black cards), label tiers for hierarchy, and one saturated object per screen state: the verdict pill. The pill carries a shape and a word as well as a color, so the call holds up in peripheral vision, in grayscale and for color-blind viewers. Light mode follows the system setting and swaps to grouped-gray grounds with darker signal inks. Density is moderate. The live card is generous and the evidence is compact grouped lists, so one glance gets the call and a deliberate look gets the proof.\n\nThe retired \"Score Bug\" world (broadcast plates, condensed display type, zero radius, stepped flicks) is a confirmed anti-reference. So is the research dashboard of KPI tiles, charts and section cards.",
+    "keyCharacteristics": [
+      "System grounds and label tiers; no brand hue besides the four signal colors.",
+      "One solid, saturated verdict pill carrying shape, word and color together.",
+      "MAX as the heaviest figure on screen: tabular, tightly tracked, sized by container query.",
+      "Continuous rounded corners that nest: card, then pill, then grouped list, then control.",
+      "Material translucency on chrome only (scrolled toolbar, setup popover, undo toast).",
+      "Critically damped springs everywhere, with bounce only after a sheet flick."
+    ],
+    "rules": [
+      {
+        "name": "The One Saturated Object Rule",
+        "body": "At full saturation, signal color fills only the verdict pill and its Island. Everywhere else it appears as a shape in signal ink or as a 26% band on the price axis. Text, cards and controls stay on system grays.",
+        "section": "colors"
+      },
+      {
+        "name": "The Signal On Solid Rule",
+        "body": "Signal color always sits on a solid layer and never on a material, so the verdict stays legible over a changing background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Alarm Without Color Rule",
+        "body": "OVER and high risk never turn red. The value inverts to a label-ink plate (label background, card-colored text), so the alarm reads by form and the red stays reserved for PASS.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Every price, bid, count, percentage and clock uses `font-variant-numeric: tabular-nums`. Glance figures drop the cents, and a ceiling rounds down so following it never overshoots.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracking Follows Size Rule",
+        "body": "Tracking tightens as size grows: −0.04em on MAX, −0.025em on the verdict word, about −0.02em on titles, −0.006em on body. Only the tiny axis band words open up (+0.01em).",
+        "section": "typography"
+      },
+      {
+        "name": "The Material Is Chrome Rule",
+        "body": "Translucency (`blur + saturate(180%)`) belongs only to the scrolled toolbar, the setup popover and the toast. Cards, pills, lists and the sheet stay solid, and two light materials never stack.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Scroll-Edge Rule",
+        "body": "Where floating chrome meets scrolling content, a mask-image fade does the separating: the toolbar material fades out over 1.25rem below the bar, and the sheet body fades in over 0.75rem. Hairline separators belong inside grouped lists, inset 0.875rem from the leading edge, never as a line between chrome and content.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Accessibility Collapse Rule",
+        "body": "`prefers-reduced-transparency` turns every material solid. `prefers-contrast: more` turns them solid, removes the masks, and puts a 1px label-2 inset border on cards, rows, groups, notices and the sheet.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do carry every signal state with its shape and word as well as its color: ▲ BUY, ◆ WATCH, ▼ PASS, ○ NO CALL, wherever a verdict appears.",
+      "Do keep signal fills on solid layers, with signal-black (#000000) text on them in both modes.",
+      "Do use tabular numerals for every money figure, count and clock, and round ceilings down.",
+      "Do nest radii from card (1.375rem) to pill (1.125rem) to group (0.875rem) to control (0.625rem), and use capsules for anything pressable or status-like.",
+      "Do separate floating chrome from content with a mask fade, and use 0.5px inset hairlines only inside grouped lists.",
+      "Do animate with the default critically damped spring (0.35s) and reserve bounce for a flicked sheet.",
+      "Do show staleness by form: drop the fill and keep the ring, shape and word, and dash the bid line.",
+      "Do honor `prefers-reduced-motion`, `prefers-reduced-transparency` and `prefers-contrast: more` in every new component."
+    ],
+    "donts": [
+      "Don't put signal color on a material, on text, or on any second large surface. The verdict pill is the only saturated object.",
+      "Don't turn OVER or high risk red. Invert to a label-ink plate instead.",
+      "Don't add a display or condensed web font. The system stack is binding.",
+      "Don't bring back the Score Bug world: broadcast plates, zero radius, condensed type, stepped animations.",
+      "Don't build the research-dashboard look of KPI tiles, charts and stacked section cards around the live card.",
+      "Don't loop, pulse or repeat a signal-change animation.",
+      "Don't apply translucency to cards, pills, lists or the sheet."
+    ]
+  }
+}
