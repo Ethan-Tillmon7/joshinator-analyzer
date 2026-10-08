@@ -4,9 +4,11 @@ export interface StreamViewerProps {
   frameData: { image: string; timestamp: number } | null;
   isAnalyzing: boolean;
   regionSelected: boolean;
+  // thumb: the lower-third aim check · preview: the larger frame in the setup plate
+  variant?: 'thumb' | 'preview';
 }
 
-const StreamViewer: React.FC<StreamViewerProps> = ({ frameData, isAnalyzing, regionSelected }) => {
+const StreamViewer: React.FC<StreamViewerProps> = ({ frameData, isAnalyzing, regionSelected, variant = 'thumb' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -27,26 +29,21 @@ const StreamViewer: React.FC<StreamViewerProps> = ({ frameData, isAnalyzing, reg
 
   if (!frameData) {
     const message = isAnalyzing
-      ? 'Waiting for frames...'
+      ? 'Waiting for frames'
       : regionSelected
-        ? 'Click Start Analysis to begin streaming'
-        : 'Select a region to get started';
+        ? 'Feed starts with Start'
+        : 'No region set';
 
     return (
-      <div className="stream-viewer">
-        <div className="stream-placeholder">
-          <p className="stream-placeholder-text">{message}</p>
-        </div>
+      <div className={`stream-viewer stream-viewer-${variant} is-empty`}>
+        <span className="stream-empty-text">{variant === 'thumb' ? 'No feed' : message}</span>
       </div>
     );
   }
 
   return (
-    <div className="stream-viewer">
-      <canvas
-        ref={canvasRef}
-        style={{ maxWidth: '100%', borderRadius: '8px' }}
-      />
+    <div className={`stream-viewer stream-viewer-${variant}`}>
+      <canvas ref={canvasRef} aria-label="Latest captured frame from the selected screen region" role="img" />
     </div>
   );
 };

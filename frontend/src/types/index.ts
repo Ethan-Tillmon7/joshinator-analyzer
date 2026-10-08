@@ -42,23 +42,27 @@ export interface OCRResult {
   ocr_engine: string;
 }
 
+// The backend OCR parser only guarantees current_bid, time_remaining, bid_count and seller.
+// 0 / '' mean "not read off the stream", never a real value.
 export interface AuctionInfo {
   current_bid: number;
   time_remaining: string;
   bid_count: number;
-  starting_bid: number;
-  reserve_met: boolean;
-  bidding_velocity: 'slow' | 'normal' | 'fast' | 'frenzied';
-  platform: string;
-  auction_id: string;
-  seller_rating: number;
-  shipping_cost: number;
+  seller?: string;
+  starting_bid?: number;
+  reserve_met?: boolean;
+  bidding_velocity?: 'slow' | 'normal' | 'fast' | 'frenzied';
+  platform?: string;
+  auction_id?: string;
+  seller_rating?: number;
+  shipping_cost?: number;
 }
 
 export interface FairValueRange {
   min: number;
   max: number;
-  confidence: number;
+  estimated: number;
+  confidence?: number;
 }
 
 export interface ROIAnalysis {
@@ -68,7 +72,7 @@ export interface ROIAnalysis {
   roi_potential: number;
   suggested_max_bid: number;
   break_even_price: number;
-  profit_margin: number;
+  profit_margin: number; // percent of estimated value, not dollars
   fair_value_range: FairValueRange;
   key_factors: string[];
   risk_factors: string[];
@@ -89,6 +93,7 @@ export interface PriceData {
   sale_dates: string[];
   sources: string[];
   timeframe: string;
+  query_used?: string;
   error?: string;
 }
 
@@ -115,13 +120,19 @@ export interface AnalysisResult {
   // Market pricing data
   pricing_data: PriceData;
   
-  // Market trends and indicators
-  market_trends: MarketTrends;
-  
+  // Market trends and indicators (not produced by the backend yet)
+  market_trends?: MarketTrends;
+
   // Metadata
-  timestamp: number;
-  processing_time: number;
-  analysis_version: string;
+  timestamp: number; // backend frame counter, not a clock time
+  processing_time?: number;
+  analysis_version?: string; // 'mock' marks demo data
+
+  // Stamped client-side when the result arrives (ms since epoch)
+  received_at?: number;
+
+  // Stamped client-side: the session lot this read belongs to (a new card starts a new lot)
+  lot_number?: number;
 
   // Phase 2: audio
   audio_status?: {

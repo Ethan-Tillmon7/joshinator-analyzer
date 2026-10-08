@@ -1,442 +1,139 @@
 // frontend/src/App.tsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import {
+  Film,
+  Link2,
+  Link2Off,
+  Mic,
+  MicOff,
+  Play,
+  RotateCw,
+  ScanLine,
+  SlidersHorizontal,
+  Square,
+  X,
+} from 'lucide-react';
 import socketService from './services/socketService';
 import StreamViewer from './components/StreamViewer';
-import AnalysisDisplay from './components/AnalysisDisplay';
+import AnalysisDisplay, { IdleState, Island, islandPropsFor } from './components/AnalysisDisplay';
+import Evidence from './components/Evidence';
+import EvidenceSheet from './components/EvidenceSheet';
+import ResultsTicker from './components/ResultsTicker';
 import { AnalysisResult, FrameData, SocketError } from './types';
+import { DEMO_MODE, buildDemoResults, isDemoResult } from './mocks/demoResults';
+import { formatClockTime, formatLot, lotKey } from './lib/format';
+import { ResultSource, readVerdict } from './lib/verdict';
+import { MATERIAL_HIDDEN, MATERIAL_SHOWN, SPRING } from './lib/motion';
 import './App.css';
 
-const MOCK_RESULTS: AnalysisResult[] = [
-  // 1 — Mike Trout 2011 Topps Update RC PSA 9 · BUY
-  {
-    card_info: {
-      player_name: 'Mike Trout',
-      year: '2011',
-      set_name: 'Topps Update',
-      card_number: 'US175',
-      grade: 'PSA 9',
-      parallel: 'Base',
-      rookie: true,
-      auto: false,
-      patch: false,
-      manufacturer: 'Topps',
-      sport: 'Baseball',
-      position: 'CF',
-      team: 'Los Angeles Angels',
-      ocr_engine: 'mock',
-    },
-    auction_info: {
-      current_bid: 145.00,
-      time_remaining: '1:42',
-      bid_count: 11,
-      bidding_velocity: 'fast',
-      starting_bid: 1.00,
-      reserve_met: true,
-      platform: 'Whatsnot',
-      auction_id: 'mock-001',
-      seller_rating: 4.9,
-      shipping_cost: 5.00,
-    },
-    pricing_data: {
-      prices: [172, 165, 190, 158, 185, 168, 195, 162],
-      sale_dates: ['1d ago', '2d ago', '3d ago', '4d ago', '5d ago', '6d ago', '8d ago', '9d ago'],
-      average: 174.38,
-      median: 170.00,
-      min: 158,
-      max: 195,
-      count: 24,
-      standard_deviation: 12.4,
-      timeframe: 'Last 90 days',
-      sources: ['eBay Sold', 'PSA APR', '130Point'],
-    },
-    market_trends: {
-      price_trend: 8.3,
-      volume_trend: 3.1,
-      volatility: 0.12,
-      last_updated: '2 min ago',
-      seasonal_factor: 1.05,
-      market_sentiment: 'bullish',
-    },
-    roi_analysis: {
-      signal: 'GREEN',
-      recommendation: 'BUY',
-      confidence: 0.87,
-      roi_potential: 20.3,
-      suggested_max_bid: 165.00,
-      break_even_price: 152.00,
-      profit_margin: 29.38,
-      fair_value_range: { min: 158, max: 195, confidence: 0.87 },
-      key_factors: [
-        'Current bid is 17% below market average',
-        'Rookie card with strong long-term demand',
-        'PSA 9 is the most liquid grade for this card',
-        'High bidding velocity — price may still climb',
-        'Market trending up +8.3% over the last 30 days',
-      ],
-      risk_factors: [
-        'Active bidding war may push price above fair value',
-        'PSA 10 copies trade at a significant premium',
-      ],
-      risk_level: 'low',
-      deal_score: 82,
-      comp_count: 24,
-      insufficient_data_reason: null,
-    },
-    confidence: 0.92,
-    timestamp: 5,
-    processing_time: 1.24,
-    analysis_version: 'mock',
-  },
+export type { ResultSource } from './lib/verdict';
 
-  // 2 — Shohei Ohtani 2018 Topps Update RC PSA 10 · STRONG BUY
-  {
-    card_info: {
-      player_name: 'Shohei Ohtani',
-      year: '2018',
-      set_name: 'Topps Update',
-      card_number: 'US1',
-      grade: 'PSA 10',
-      parallel: 'Base',
-      rookie: true,
-      auto: false,
-      patch: false,
-      manufacturer: 'Topps',
-      sport: 'Baseball',
-      position: 'SP/DH',
-      team: 'Los Angeles Angels',
-      ocr_engine: 'mock',
-    },
-    auction_info: {
-      current_bid: 88.00,
-      time_remaining: '0:31',
-      bid_count: 7,
-      bidding_velocity: 'normal',
-      starting_bid: 1.00,
-      reserve_met: true,
-      platform: 'Whatsnot',
-      auction_id: 'mock-002',
-      seller_rating: 4.8,
-      shipping_cost: 5.00,
-    },
-    pricing_data: {
-      prices: [135, 128, 142, 119, 138, 131, 145, 122],
-      sale_dates: ['2d ago', '3d ago', '3d ago', '5d ago', '6d ago', '7d ago', '9d ago', '11d ago'],
-      average: 132.50,
-      median: 131.50,
-      min: 119,
-      max: 145,
-      count: 31,
-      standard_deviation: 9.1,
-      timeframe: 'Last 90 days',
-      sources: ['eBay Sold', 'PSA APR', '130Point'],
-    },
-    market_trends: {
-      price_trend: 14.7,
-      volume_trend: 8.2,
-      volatility: 0.09,
-      last_updated: '4 min ago',
-      seasonal_factor: 1.12,
-      market_sentiment: 'bullish',
-    },
-    roi_analysis: {
-      signal: 'GREEN',
-      recommendation: 'STRONG_BUY',
-      confidence: 0.93,
-      roi_potential: 50.6,
-      suggested_max_bid: 120.00,
-      break_even_price: 108.00,
-      profit_margin: 44.50,
-      fair_value_range: { min: 119, max: 145, confidence: 0.93 },
-      key_factors: [
-        'Bid is 34% below recent market average',
-        'PSA 10 Ohtani RC demand accelerating post-WS win',
-        'Highest sales volume of any comp in this grade',
-        'Low volatility — price is stable and predictable',
-        'Market up +14.7% — strong momentum',
-      ],
-      risk_factors: [
-        'Short time remaining may not attract more bidders',
-      ],
-      risk_level: 'low',
-      deal_score: 94,
-      comp_count: 31,
-      insufficient_data_reason: null,
-    },
-    confidence: 0.93,
-    timestamp: 4,
-    processing_time: 1.08,
-    analysis_version: 'mock',
-  },
+const BACKEND_ADDRESS = 'localhost:3001';
 
-  // 3 — Ronald Acuña Jr. 2018 Topps Chrome RC PSA 10 · WATCH
-  {
-    card_info: {
-      player_name: 'Ronald Acuña Jr.',
-      year: '2018',
-      set_name: 'Topps Chrome',
-      card_number: 'HMT31',
-      grade: 'PSA 10',
-      parallel: 'Base',
-      rookie: true,
-      auto: false,
-      patch: false,
-      manufacturer: 'Topps',
-      sport: 'Baseball',
-      position: 'RF',
-      team: 'Atlanta Braves',
-      ocr_engine: 'mock',
-    },
-    auction_info: {
-      current_bid: 210.00,
-      time_remaining: '3:15',
-      bid_count: 18,
-      bidding_velocity: 'frenzied',
-      starting_bid: 50.00,
-      reserve_met: true,
-      platform: 'Whatsnot',
-      auction_id: 'mock-003',
-      seller_rating: 5.0,
-      shipping_cost: 5.00,
-    },
-    pricing_data: {
-      prices: [218, 205, 230, 198, 215, 225, 208, 212],
-      sale_dates: ['1d ago', '2d ago', '2d ago', '4d ago', '5d ago', '6d ago', '7d ago', '8d ago'],
-      average: 213.88,
-      median: 213.50,
-      min: 198,
-      max: 230,
-      count: 19,
-      standard_deviation: 10.2,
-      timeframe: 'Last 90 days',
-      sources: ['eBay Sold', 'PSA APR', '130Point'],
-    },
-    market_trends: {
-      price_trend: 2.1,
-      volume_trend: -1.4,
-      volatility: 0.17,
-      last_updated: '1 min ago',
-      seasonal_factor: 0.98,
-      market_sentiment: 'neutral',
-    },
-    roi_analysis: {
-      signal: 'YELLOW',
-      recommendation: 'WATCH',
-      confidence: 0.78,
-      roi_potential: 1.8,
-      suggested_max_bid: 200.00,
-      break_even_price: 196.00,
-      profit_margin: 3.88,
-      fair_value_range: { min: 198, max: 230, confidence: 0.78 },
-      key_factors: [
-        'Bid is near market average — thin margin',
-        'Frenzied bidding likely to push past fair value',
-        'Moderate volatility reduces pricing confidence',
-      ],
-      risk_factors: [
-        'Frenzied velocity — final price typically exceeds estimate',
-        'ACL recovery timeline adds player risk',
-        'Thin upside at current bid level',
-      ],
-      risk_level: 'medium',
-      deal_score: 51,
-      comp_count: 19,
-      insufficient_data_reason: null,
-    },
-    confidence: 0.78,
-    timestamp: 3,
-    processing_time: 0.97,
-    analysis_version: 'mock',
-  },
+// socket.io transport errors ("xhr poll error", "websocket error") mean the backend is unreachable.
+function describeConnectionError(message: string | undefined): string {
+  if (!message || /xhr poll error|websocket error|timeout|ECONNREFUSED/i.test(message)) {
+    return `Can't reach the Joshinator backend at ${BACKEND_ADDRESS}. Start it with "uvicorn app.main:socket_app --port 3001", then retry.`;
+  }
+  return `Lost the backend connection (${message}). Retrying will reconnect without clearing your results.`;
+}
 
-  // 4 — Fernando Tatis Jr. 2019 Topps Chrome RC PSA 10 · BUY
-  {
-    card_info: {
-      player_name: 'Fernando Tatis Jr.',
-      year: '2019',
-      set_name: 'Topps Chrome',
-      card_number: '204',
-      grade: 'PSA 10',
-      parallel: 'Base',
-      rookie: true,
-      auto: false,
-      patch: false,
-      manufacturer: 'Topps',
-      sport: 'Baseball',
-      position: 'SS',
-      team: 'San Diego Padres',
-      ocr_engine: 'mock',
-    },
-    auction_info: {
-      current_bid: 62.00,
-      time_remaining: '2:08',
-      bid_count: 9,
-      bidding_velocity: 'normal',
-      starting_bid: 1.00,
-      reserve_met: true,
-      platform: 'Whatsnot',
-      auction_id: 'mock-004',
-      seller_rating: 4.7,
-      shipping_cost: 5.00,
-    },
-    pricing_data: {
-      prices: [82, 78, 91, 75, 85, 80, 88, 77],
-      sale_dates: ['1d ago', '3d ago', '4d ago', '5d ago', '6d ago', '7d ago', '9d ago', '10d ago'],
-      average: 82.00,
-      median: 81.00,
-      min: 75,
-      max: 91,
-      count: 28,
-      standard_deviation: 5.7,
-      timeframe: 'Last 90 days',
-      sources: ['eBay Sold', 'PSA APR', '130Point'],
-    },
-    market_trends: {
-      price_trend: 5.9,
-      volume_trend: 4.3,
-      volatility: 0.11,
-      last_updated: '6 min ago',
-      seasonal_factor: 1.03,
-      market_sentiment: 'bullish',
-    },
-    roi_analysis: {
-      signal: 'GREEN',
-      recommendation: 'BUY',
-      confidence: 0.84,
-      roi_potential: 24.2,
-      suggested_max_bid: 75.00,
-      break_even_price: 68.00,
-      profit_margin: 20.00,
-      fair_value_range: { min: 75, max: 91, confidence: 0.84 },
-      key_factors: [
-        'Bid is 24% below market average',
-        'Return from suspension boosted demand significantly',
-        'PSA 10 grade in high supply — easy to resell',
-        'Low volatility indicates reliable price floor',
-      ],
-      risk_factors: [
-        'Suspension history introduces long-term holding risk',
-        'PSA 10 supply is relatively high, limiting scarcity premium',
-      ],
-      risk_level: 'low',
-      deal_score: 78,
-      comp_count: 28,
-      insufficient_data_reason: null,
-    },
-    confidence: 0.84,
-    timestamp: 2,
-    processing_time: 1.11,
-    analysis_version: 'mock',
-  },
+// Demo lots are numbered oldest-first so the stack reads like a real session.
+const stampDemo = (results: AnalysisResult[]): AnalysisResult[] =>
+  results.map((r, i) => ({ ...r, lot_number: results.length - i }));
+const DEMO_RESULTS = DEMO_MODE ? stampDemo(buildDemoResults()) : [];
 
-  // 5 — Juan Soto 2018 Topps Chrome RC PSA 9 · PASS
-  {
-    card_info: {
-      player_name: 'Juan Soto',
-      year: '2018',
-      set_name: 'Topps Chrome',
-      card_number: 'HMT53',
-      grade: 'PSA 9',
-      parallel: 'Base',
-      rookie: true,
-      auto: false,
-      patch: false,
-      manufacturer: 'Topps',
-      sport: 'Baseball',
-      position: 'LF',
-      team: 'New York Yankees',
-      ocr_engine: 'mock',
-    },
-    auction_info: {
-      current_bid: 95.00,
-      time_remaining: '4:50',
-      bid_count: 14,
-      bidding_velocity: 'fast',
-      starting_bid: 25.00,
-      reserve_met: true,
-      platform: 'Whatsnot',
-      auction_id: 'mock-005',
-      seller_rating: 4.6,
-      shipping_cost: 5.00,
-    },
-    pricing_data: {
-      prices: [72, 68, 75, 65, 71, 74, 69, 73],
-      sale_dates: ['1d ago', '2d ago', '3d ago', '5d ago', '6d ago', '7d ago', '9d ago', '12d ago'],
-      average: 70.88,
-      median: 71.50,
-      min: 65,
-      max: 75,
-      count: 16,
-      standard_deviation: 3.4,
-      timeframe: 'Last 90 days',
-      sources: ['eBay Sold', 'PSA APR', '130Point'],
-    },
-    market_trends: {
-      price_trend: -3.2,
-      volume_trend: -5.1,
-      volatility: 0.08,
-      last_updated: '3 min ago',
-      seasonal_factor: 0.96,
-      market_sentiment: 'bearish',
-    },
-    roi_analysis: {
-      signal: 'RED',
-      recommendation: 'PASS',
-      confidence: 0.89,
-      roi_potential: -25.3,
-      suggested_max_bid: 65.00,
-      break_even_price: 58.00,
-      profit_margin: -24.12,
-      fair_value_range: { min: 65, max: 75, confidence: 0.89 },
-      key_factors: [
-        'Current bid is 34% above market average',
-        'Market trending down — prices softening',
-        'PSA 9 Soto RC trades at a steep PSA 10 discount',
-        'Low volatility confirms this price is an outlier',
-      ],
-      risk_factors: [
-        'Bid already exceeds the high end of fair value range',
-        'Declining volume trend suggests weakening demand',
-        'Significant loss likely at current bid level',
-      ],
-      risk_level: 'high',
-      deal_score: 18,
-      comp_count: 16,
-      insufficient_data_reason: null,
-    },
-    confidence: 0.89,
-    timestamp: 1,
-    processing_time: 0.88,
-    analysis_version: 'mock',
-  },
+const HISTORY_LIMIT = 10;
+const UNDO_MS = 6000;
+
+// An empty field stays empty (NaN) instead of silently becoming 0
+const parseRegionValue = (raw: string): number => (raw.trim() === '' ? NaN : Math.round(Number(raw)));
+
+const REGION_PRESETS = [
+  { label: 'Stream window', region: { top: 80, left: 0, width: 1280, height: 720 } },
+  { label: 'Full screen 1080p', region: { top: 0, left: 0, width: 1920, height: 1080 } },
+  { label: 'Full screen 1440p', region: { top: 0, left: 0, width: 2560, height: 1440 } },
 ];
 
+// A second monitor has room to keep the evidence open beside the card.
+const WIDE_QUERY = '(min-width: 60rem)';
+
+function useMediaQuery(query: string): boolean {
+  const get = () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches;
+  const [matches, setMatches] = useState(get);
+  useEffect(() => {
+    const mql = window.matchMedia?.(query);
+    if (!mql) return;
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener?.('change', onChange);
+    return () => mql.removeEventListener?.('change', onChange);
+  }, [query]);
+  return matches;
+}
+
+const isTypingTarget = (target: EventTarget | null): boolean => {
+  const el = target as HTMLElement | null;
+  return !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+};
+
 function App() {
+  const isWide = useMediaQuery(WIDE_QUERY);
+
   const [isConnected, setIsConnected] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [frameData, setFrameData] = useState<FrameData | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(MOCK_RESULTS[0]);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(DEMO_RESULTS[0] ?? null);
   const [error, setError] = useState<string | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [regionSelected, setRegionSelected] = useState(false);
-  const [analysisHistory, setAnalysisHistory] = useState<AnalysisResult[]>(MOCK_RESULTS.slice(1));
+  const [analysisHistory, setAnalysisHistory] = useState<AnalysisResult[]>(DEMO_RESULTS.slice(1));
   const [audioActive, setAudioActive] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [vodMode, setVodMode] = useState(false);
   const [vodPath, setVodPath] = useState('');
   const [vodStatus, setVodStatus] = useState<string | null>(null);
-  const [showRegionPanel, setShowRegionPanel] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
   const [regionInputs, setRegionInputs] = useState({ top: 100, left: 100, width: 1200, height: 800 });
-  const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [selectedHistoryResult, setSelectedHistoryResult] = useState<AnalysisResult | null>(null);
+  const [evidenceOpen, setEvidenceOpen] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(WIDE_QUERY).matches);
+  const [clearedHistory, setClearedHistory] = useState<AnalysisResult[] | null>(null);
+  const [cardOutOfView, setCardOutOfView] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // The live lot as of the last read, and the session's lot counter
+  const liveRef = useRef<AnalysisResult | null>(DEMO_RESULTS[0] ?? null);
+  const lotSeq = useRef(0);
+  const demoLotSeq = useRef(DEMO_RESULTS.length);
+  const demoCursor = useRef(1);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Wide screens keep the evidence beside the card; narrow ones fold it into a sheet.
+  useEffect(() => {
+    setEvidenceOpen(isWide);
+  }, [isWide]);
 
   const handleFrameData = useCallback((data: FrameData) => {
     setFrameData(data);
   }, []);
 
-  const handleAnalysisResult = useCallback((result: AnalysisResult) => {
+  const handleAnalysisResult = useCallback((incoming: AnalysisResult) => {
+    const prev = liveRef.current;
+    const prevIsLive = !!prev && !isDemoResult(prev);
+    const isNewLot = !prevIsLive || lotKey(prev!) !== lotKey(incoming);
+    if (isNewLot) lotSeq.current += 1;
+    const result: AnalysisResult = { ...incoming, received_at: Date.now(), lot_number: lotSeq.current };
+    liveRef.current = result;
     setAnalysisResult(result);
-    setAnalysisHistory(prev => [result, ...prev.slice(0, 9)]);
-    setAudioActive(!!(result as any).audio_status?.is_active);
+    // A new card ends the previous lot: it joins the stack. Live lots replace demo history.
+    if (isNewLot) {
+      setAnalysisHistory(h => {
+        const real = h.filter(r => !isDemoResult(r));
+        return (prevIsLive ? [prev!, ...real] : real).slice(0, HISTORY_LIMIT);
+      });
+    }
+    setAudioActive(!!result.audio_status?.is_active);
     setSelectedHistoryResult(null); // resume live view on new result
   }, []);
 
@@ -466,9 +163,9 @@ function App() {
         }
       });
 
-      socket.on('connect_error', (error: any) => {
+      socket.on('connect_error', (error: Error) => {
         if (mounted) {
-          setConnectionError(`Connection failed: ${error.message}`);
+          setConnectionError(describeConnectionError(error?.message));
           setIsConnected(false);
         }
       });
@@ -484,7 +181,7 @@ function App() {
         if (mounted) setSessionId(data.session_id);
       });
       socketService.onVODLoaded((data) => {
-        if (mounted) setVodStatus(`Loaded — ${data.duration_seconds.toFixed(1)}s, ${data.frame_count} frames`);
+        if (mounted) setVodStatus(`Loaded · ${data.duration_seconds.toFixed(1)}s, ${data.frame_count} frames`);
       });
       socketService.onVODReplayComplete(() => {
         if (mounted) { setIsAnalyzing(false); setVodStatus('Replay complete'); }
@@ -492,7 +189,7 @@ function App() {
 
     } catch (err) {
       if (mounted) {
-        setConnectionError('Failed to initialize socket connection');
+        setConnectionError(describeConnectionError(undefined));
         console.error('Socket initialization error:', err);
       }
     }
@@ -503,345 +200,488 @@ function App() {
     };
   }, [handleFrameData, handleAnalysisResult, handleSocketError]);
 
-  const handleStartAnalysis = useCallback(() => {
-    if (!isConnected) { setError('Not connected to backend'); return; }
-    if (!regionSelected) { setError('Please select a screen region first'); return; }
-    setIsAnalyzing(true);
-    setError(null);
+  // Starting fresh files the current live lot into the stack instead of dropping it.
+  const parkLiveLot = useCallback(() => {
+    const prev = liveRef.current;
+    if (prev && !isDemoResult(prev)) {
+      setAnalysisHistory(h => [prev, ...h.filter(r => !isDemoResult(r) && r !== prev)].slice(0, HISTORY_LIMIT));
+    } else {
+      setAnalysisHistory(h => h.filter(r => !isDemoResult(r)));
+    }
+    liveRef.current = null;
     setAnalysisResult(null);
+  }, []);
+
+  const handleStartAnalysis = useCallback(() => {
+    if (!isConnected) { setError('Not connected to the backend'); return; }
+    if (!regionSelected) { setError('Set a capture region first'); return; }
+    setIsAnalyzing(true);
+    setVodMode(false);
+    setError(null);
+    parkLiveLot();
+    setShowSetup(false);
     socketService.startAnalysis();
-  }, [isConnected, regionSelected]);
+  }, [isConnected, regionSelected, parkLiveLot]);
 
   const handleStopAnalysis = useCallback(() => {
     setIsAnalyzing(false);
     socketService.stopAnalysis();
   }, []);
 
-  const handleSelectRegion = useCallback(() => {
-    if (!isConnected) { setError('Not connected to backend'); return; }
-    setShowRegionPanel(prev => !prev);
+  const handleToggleSetup = useCallback(() => {
+    if (!isConnected) { setError('Not connected to the backend'); return; }
+    setShowSetup(prev => !prev);
   }, [isConnected]);
 
   const handleApplyRegion = useCallback(() => {
-    if (regionInputs.width <= 0 || regionInputs.height <= 0) {
-      setError('Width and height must be greater than 0');
+    const { top, left, width, height } = regionInputs;
+    if (![top, left, width, height].every(Number.isFinite)) {
+      setError('Region values must be whole numbers of pixels');
       return;
     }
+    if (top < 0 || left < 0) {
+      setError('Top and Left can\'t be negative: 0 is the top-left corner of your main display');
+      return;
+    }
+    if (width < 100 || height < 100) {
+      setError('Width and height must each be at least 100px so the card text is readable');
+      return;
+    }
+    setError(null);
     setRegionSelected(false);
     socketService.selectRegion(regionInputs);
-    setShowRegionPanel(false);
+    setShowSetup(false);
   }, [regionInputs]);
-
-  const applyPreset = useCallback((preset: { top: number; left: number; width: number; height: number }) => {
-    setRegionInputs(preset);
-  }, []);
 
   const clearError = useCallback(() => setError(null), []);
   const clearConnectionError = useCallback(() => setConnectionError(null), []);
 
+  // Reconnect in place so the current verdict and history survive
   const handleRetryConnection = useCallback(() => {
     clearConnectionError();
-    window.location.reload();
+    const socket = socketService.getSocket();
+    if (socket) socket.connect();
   }, [clearConnectionError]);
 
-  const analysisDisplayRef = useRef<HTMLDivElement>(null);
+  // Forgiveness over confirmation: Clear acts at once and offers Undo for a few seconds.
+  const handleClearHistory = useCallback(() => {
+    setClearedHistory(analysisHistory);
+    setAnalysisHistory([]);
+    setSelectedHistoryResult(null);
+  }, [analysisHistory]);
+
+  const handleUndoClear = useCallback(() => {
+    if (clearedHistory) setAnalysisHistory(h => [...h, ...clearedHistory].slice(0, HISTORY_LIMIT));
+    setClearedHistory(null);
+  }, [clearedHistory]);
+
+  useEffect(() => {
+    if (!clearedHistory) return;
+    const id = window.setTimeout(() => setClearedHistory(null), UNDO_MS);
+    return () => window.clearTimeout(id);
+  }, [clearedHistory]);
+
+  // Demo only: N ends the current sample lot and calls the next one, to show a lot change.
+  const advanceDemoLot = useCallback(() => {
+    const pool = buildDemoResults();
+    const seed = pool[demoCursor.current % pool.length];
+    demoCursor.current += 1;
+    demoLotSeq.current += 1;
+    const next: AnalysisResult = { ...seed, received_at: Date.now(), lot_number: demoLotSeq.current };
+    const prev = liveRef.current;
+    liveRef.current = next;
+    if (prev) setAnalysisHistory(h => [prev, ...h].slice(0, HISTORY_LIMIT));
+    setAnalysisResult(next);
+    setSelectedHistoryResult(null);
+  }, []);
+
+  const toggleEvidence = useCallback(() => setEvidenceOpen(v => !v), []);
+
+  // Keyboard: S start/stop · R setup · E evidence · Esc back out · N next sample lot (demo)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || isTypingTarget(e.target)) {
+        if (e.key === 'Escape' && isTypingTarget(e.target)) (e.target as HTMLElement).blur();
+        return;
+      }
+      const key = e.key.toLowerCase();
+      if (key === 's') {
+        e.preventDefault();
+        if (isAnalyzing) handleStopAnalysis();
+        else if (isConnected && regionSelected) handleStartAnalysis();
+      } else if (key === 'r') {
+        if (isConnected && !isAnalyzing) { e.preventDefault(); setShowSetup(v => !v); }
+      } else if (key === 'e') {
+        e.preventDefault();
+        toggleEvidence();
+      } else if (key === 'n' && DEMO_MODE && !isAnalyzing) {
+        e.preventDefault();
+        advanceDemoLot();
+      } else if (e.key === 'Escape') {
+        if (!isWide && evidenceOpen) setEvidenceOpen(false);
+        else if (selectedHistoryResult) setSelectedHistoryResult(null);
+        else if (showSetup) setShowSetup(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isAnalyzing, isConnected, regionSelected, selectedHistoryResult, showSetup, isWide, evidenceOpen,
+      handleStartAnalysis, handleStopAnalysis, toggleEvidence, advanceDemoLot]);
+
+  // Floating chrome earns its scroll-edge fade only once content passes under it.
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 2);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // When the card scrolls under the toolbar, its Island takes the toolbar's center.
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setCardOutOfView(!entry.isIntersecting),
+      { rootMargin: '-64px 0px 0px 0px', threshold: 0.4 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const displayedResult = selectedHistoryResult ?? analysisResult;
 
-  // Scroll analysis panel to top whenever the displayed result changes
-  useEffect(() => {
-    analysisDisplayRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [displayedResult]);
+  const resultSource: ResultSource = selectedHistoryResult
+    ? 'history'
+    : isDemoResult(displayedResult)
+      ? 'demo'
+      : isConnected && isAnalyzing
+        ? 'live'
+        : 'paused';
+
+  // What the card says before there's a result to call
+  const idle: IdleState = !isConnected
+    ? {
+        phase: 'OFFLINE',
+        headline: 'Backend not connected',
+        detail: `Start it on port 3001, then retry.`,
+        action: { label: 'Retry', onClick: handleRetryConnection },
+      }
+    : !regionSelected
+      ? {
+          phase: 'SETUP',
+          headline: 'Set the capture region',
+          detail: 'Point it at the part of your screen that shows the card and the bid.',
+          action: { label: 'Set region', kbd: 'R', onClick: () => setShowSetup(true) },
+        }
+      : isAnalyzing
+        ? {
+            phase: 'WATCHING',
+            headline: 'Looking for a card',
+            detail: 'A call appears once a card and its bid are read off the stream.',
+          }
+        : {
+            phase: 'READY',
+            headline: 'Ready to watch',
+            detail: 'Start when the lot is up. It reads the card, pulls sold comps and makes the call.',
+            action: { label: 'Start', kbd: 'S', onClick: handleStartAnalysis },
+          };
+
+  const isReplaying = vodMode && isAnalyzing;
+  const islandVerdict = displayedResult ? readVerdict(displayedResult, resultSource, Date.now()) : null;
+  const showIsland = !isWide && cardOutOfView && isScrolled;
+  const micOn = isAnalyzing && audioActive;
+  const sheetTitle = displayedResult?.lot_number ? `Evidence · ${formatLot(displayedResult.lot_number)}` : 'Evidence';
+  const evidence = <Evidence result={displayedResult} source={resultSource} showTitle={isWide} />;
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <div className="header-content">
-          <h1>Joshinator</h1>
-          <div className="header-info">
-            <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-              <span className="status-indicator"></span>
-              <span className="status-text">{isConnected ? 'Connected' : 'Disconnected'}</span>
-            </div>
-            {isAnalyzing && (
-              <div className="analyzing-indicator">
-                <span className="spinner-small"></span>
-                <span>Analyzing...</span>
-              </div>
-            )}
-            {isAnalyzing && (
-              <div className={`mic-indicator ${audioActive ? 'mic-on' : 'mic-off'}`}>
-                <span>MIC</span>
-                <span>{audioActive ? 'ON' : 'OFF'}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+    <MotionConfig reducedMotion="user">
+      <div className="app">
+        <header className={`toolbar${isScrolled ? ' is-scrolled' : ''}${showIsland ? ' has-island' : ''}`}>
+          <h1 className="wordmark">Joshinator</h1>
 
-      <main className="App-main">
-        <div className="controls-section">
-          {/* Primary row — core workflow */}
-          <div className="controls-primary">
-            <div className="controls-left">
-              <button
-                onClick={handleSelectRegion}
-                disabled={!isConnected || isAnalyzing}
-                className={`btn btn-outline ${regionSelected ? 'btn-success' : ''} ${showRegionPanel ? 'btn-active' : ''}`}
-                title="Configure the screen region to capture"
-              >
-                {regionSelected ? 'Region ✓' : 'Select Region'}
-              </button>
-              {regionSelected && !showRegionPanel && (
-                <span className="region-coords-badge">
-                  {regionInputs.width}×{regionInputs.height} @ ({regionInputs.left}, {regionInputs.top})
-                </span>
-              )}
-              {!isAnalyzing ? (
-                <button
-                  onClick={handleStartAnalysis}
-                  disabled={!isConnected || !regionSelected}
-                  className="btn btn-primary"
-                  title="Start analyzing the selected region"
+          <div className="toolbar-center">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {showIsland ? (
+                <motion.button
+                  key="island"
+                  type="button"
+                  className="toolbar-island"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  aria-label="Back to the verdict"
+                  initial={MATERIAL_HIDDEN}
+                  animate={MATERIAL_SHOWN}
+                  exit={MATERIAL_HIDDEN}
+                  transition={SPRING}
                 >
-                  Start Analysis
-                </button>
+                  {islandVerdict ? (
+                    <Island {...islandPropsFor(islandVerdict)} />
+                  ) : (
+                    <Island signal="GRAY" word={idle.phase} />
+                  )}
+                </motion.button>
               ) : (
-                <button
-                  onClick={handleStopAnalysis}
-                  className="btn btn-secondary"
-                  title="Stop the current analysis"
+                <motion.ul
+                  key="status"
+                  className="status-list"
+                  aria-label="Status"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={SPRING}
                 >
-                  Stop
-                </button>
+                  <li className={`status-token ${isConnected ? 'is-on' : 'is-off'}`}>
+                    {isConnected ? <Link2 size={15} strokeWidth={2.25} aria-hidden /> : <Link2Off size={15} strokeWidth={2.25} aria-hidden />}
+                    <span className="status-token-label">Link</span>
+                    <span className="visually-hidden">{isConnected ? ' connected' : ' disconnected'}</span>
+                  </li>
+                  <li className={`status-token ${micOn ? 'is-on' : 'is-off'}`}>
+                    {micOn ? <Mic size={15} strokeWidth={2.25} aria-hidden /> : <MicOff size={15} strokeWidth={2.25} aria-hidden />}
+                    <span className="status-token-label">Mic</span>
+                    <span className="visually-hidden">{micOn ? ' on' : ' off'}</span>
+                  </li>
+                  <li
+                    className={`status-token ${regionSelected ? 'is-on' : 'is-off'}`}
+                    title={regionSelected ? `${regionInputs.width}×${regionInputs.height} at (${regionInputs.left}, ${regionInputs.top})` : 'No capture region set'}
+                  >
+                    <ScanLine size={15} strokeWidth={2.25} aria-hidden />
+                    <span className="status-token-label">{regionSelected ? `${regionInputs.width}×${regionInputs.height}` : 'Region'}</span>
+                    <span className="visually-hidden">{regionSelected ? ' capture region set' : ' not set'}</span>
+                  </li>
+                  {isReplaying && <li className="status-token status-flag">Replay</li>}
+                </motion.ul>
               )}
-            </div>
-            <div className="controls-right">
+            </AnimatePresence>
+          </div>
+
+          <div className="toolbar-actions">
+            <button
+              type="button"
+              onClick={handleToggleSetup}
+              disabled={!isConnected || isAnalyzing}
+              className={`btn btn-secondary${showSetup ? ' is-active' : ''}`}
+              aria-expanded={showSetup}
+              aria-controls="setup-popover"
+            >
+              <SlidersHorizontal size={15} strokeWidth={2.25} aria-hidden />
+              <span className="btn-label">Setup</span><kbd>R</kbd>
+            </button>
+            {!isAnalyzing ? (
               <button
-                onClick={() => setShowHistorySidebar(v => !v)}
-                className={`btn btn-outline btn-small ${showHistorySidebar ? 'btn-active' : ''}`}
-                title="Toggle history sidebar"
+                type="button"
+                onClick={handleStartAnalysis}
+                disabled={!isConnected || !regionSelected}
+                className="btn btn-primary"
+                title={!regionSelected ? 'Set a capture region first' : 'Start watching the region'}
               >
-                History {analysisHistory.length > 0 && `(${analysisHistory.length})`}
+                <Play size={14} strokeWidth={2.5} fill="currentColor" aria-hidden />
+                Start<kbd>S</kbd>
               </button>
-              <button
-                onClick={() => { setVodMode(v => !v); setVodStatus(null); }}
-                disabled={isAnalyzing}
-                className={`btn btn-outline btn-small ${vodMode ? 'btn-success' : ''}`}
-                title="Toggle VOD replay mode"
-              >
-                {vodMode ? 'VOD ON' : 'VOD'}
+            ) : (
+              <button type="button" onClick={handleStopAnalysis} className="btn btn-stop">
+                <Square size={12} strokeWidth={2.5} fill="currentColor" aria-hidden />
+                Stop<kbd>S</kbd>
               </button>
-            </div>
+            )}
           </div>
 
-          {/* Region config panel */}
-          {showRegionPanel && (
-            <div className="region-panel">
-              <div className="region-presets">
-                <span className="region-label">Presets:</span>
-                <button className="btn btn-outline btn-small" onClick={() => applyPreset({ top: 80, left: 0, width: 1280, height: 720 })}>Whatsnot Browser</button>
-                <button className="btn btn-outline btn-small" onClick={() => applyPreset({ top: 0, left: 0, width: 1920, height: 1080 })}>Full Screen (1080p)</button>
-                <button className="btn btn-outline btn-small" onClick={() => applyPreset({ top: 0, left: 0, width: 2560, height: 1440 })}>Full Screen (1440p)</button>
-              </div>
-              <div className="region-inputs">
-                <label>Top<input type="number" value={regionInputs.top} onChange={e => setRegionInputs(r => ({ ...r, top: +e.target.value }))} /></label>
-                <label>Left<input type="number" value={regionInputs.left} onChange={e => setRegionInputs(r => ({ ...r, left: +e.target.value }))} /></label>
-                <label>Width<input type="number" value={regionInputs.width} onChange={e => setRegionInputs(r => ({ ...r, width: +e.target.value }))} /></label>
-                <label>Height<input type="number" value={regionInputs.height} onChange={e => setRegionInputs(r => ({ ...r, height: +e.target.value }))} /></label>
-                <button className="btn btn-primary btn-small" onClick={handleApplyRegion}>Apply</button>
-                <button className="btn btn-outline btn-small" onClick={() => setShowRegionPanel(false)}>Cancel</button>
-              </div>
-            </div>
-          )}
+        </header>
 
-          {/* VOD panel */}
-          {vodMode && (
-            <div className="vod-controls">
-              <input
-                className="vod-path-input"
-                type="text"
-                placeholder="/path/to/recording.mp4"
-                value={vodPath}
-                onChange={e => setVodPath(e.target.value)}
-                disabled={isAnalyzing}
-              />
-              <button
-                className="btn btn-outline btn-small"
-                disabled={!vodPath || isAnalyzing}
-                onClick={() => { setVodStatus('Loading…'); socketService.loadVOD(vodPath); }}
-              >
-                Load
-              </button>
-              <button
-                className="btn btn-primary btn-small"
-                disabled={!vodStatus || isAnalyzing || !isConnected}
-                onClick={() => { setIsAnalyzing(true); socketService.startVODReplay(); }}
-              >
-                ▶ Replay
-              </button>
-              {vodStatus && <span className="vod-status">{vodStatus}</span>}
-            </div>
-          )}
-
-          {/* Frame counter */}
-          {frameData && (
-            <div className="status-info">
-              <span className="frame-info">Frame #{frameData.timestamp}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Alerts */}
-        {connectionError && (
-          <div className="alert alert-error">
-            <div className="alert-content">
-              <strong>Connection Error:</strong> {connectionError}
-              <button onClick={clearConnectionError} className="alert-close">×</button>
-            </div>
-            <div className="alert-actions">
-              <button onClick={handleRetryConnection} className="btn btn-small">Retry Connection</button>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="alert alert-warning">
-            <div className="alert-content">
-              <strong>Error:</strong> {error}
-              <button onClick={clearError} className="alert-close">×</button>
-            </div>
-          </div>
-        )}
-        {!isConnected && !connectionError && (
-          <div className="alert alert-info">
-            <div className="alert-content">
-              <strong>Getting Started:</strong> Make sure the backend server is running on port 3001
-            </div>
-          </div>
-        )}
-        {isConnected && !regionSelected && !isAnalyzing && (
-          <div className="alert alert-info">
-            <div className="alert-content">
-              <strong>Setup Required:</strong> Click "Select Region" to choose the area of your screen to monitor
-            </div>
-          </div>
-        )}
-
-        {/* Main content grid */}
-        <div className={`content-grid ${showHistorySidebar ? 'sidebar-open' : ''}`}>
-          <div className="stream-section">
-            <div className="section-header">
-              <h2>Live Stream</h2>
-              <div className="section-status">
-                {frameData ? (
-                  <span className="status-active">Live</span>
-                ) : isAnalyzing ? (
-                  <span className="status-waiting">Waiting...</span>
-                ) : (
-                  <span className="status-inactive">Inactive</span>
-                )}
-              </div>
-            </div>
-            <StreamViewer
-              frameData={frameData}
-              isAnalyzing={isAnalyzing}
-              regionSelected={regionSelected}
-            />
-          </div>
-
-          <div className="analysis-section" ref={analysisDisplayRef}>
-            <div className="section-header">
-              <h2>Analysis {selectedHistoryResult ? '(History)' : 'Results'}</h2>
-              <div className="section-status">
-                {selectedHistoryResult ? (
-                  <span className="status-waiting">Viewing past result</span>
-                ) : displayedResult ? (
-                  <span className="status-active">Results Available</span>
-                ) : isAnalyzing ? (
-                  <span className="status-waiting">Processing...</span>
-                ) : (
-                  <span className="status-inactive">No Data</span>
-                )}
-              </div>
-            </div>
-            <AnalysisDisplay
-              result={displayedResult}
-              isAnalyzing={isAnalyzing && !selectedHistoryResult}
-            />
-          </div>
-
-          {/* History sidebar */}
-          {showHistorySidebar && (
-            <div className="history-sidebar">
-              <div className="sidebar-header">
-                <span>History</span>
-                <button
-                  className="sidebar-close"
-                  onClick={() => { setShowHistorySidebar(false); setSelectedHistoryResult(null); }}
-                >×</button>
-              </div>
-
-              {analysisHistory.length === 0 ? (
-                <p className="sidebar-empty">No results yet</p>
-              ) : (
-                <>
-                  {analysisHistory.map((result, i) => {
-                    const signal = (result as any).roi_analysis?.signal ?? 'GRAY';
-                    const player = (result as any).card_info?.player_name || 'Unknown';
-                    const grade = (result as any).card_info?.grade || '';
-                    const bid = (result as any).auction_info?.current_bid ?? 0;
+        <AnimatePresence>
+          {showSetup && (
+            <motion.section
+              className="setup-popover"
+              id="setup-popover"
+              aria-label="Setup"
+              initial={MATERIAL_HIDDEN}
+              animate={MATERIAL_SHOWN}
+              exit={MATERIAL_HIDDEN}
+              transition={SPRING}
+            >
+              <div className="setup-group">
+                <h2 className="setup-title">Capture region</h2>
+                <div className="segmented" role="group" aria-label="Region presets">
+                  {REGION_PRESETS.map(p => {
+                    const active = (['top', 'left', 'width', 'height'] as const).every(k => regionInputs[k] === p.region[k]);
                     return (
-                      <div
-                        key={i}
-                        className={`sidebar-item ${selectedHistoryResult === result ? 'sidebar-item-active' : ''}`}
-                        onClick={() => setSelectedHistoryResult(r => r === result ? null : result)}
+                      <button
+                        key={p.label}
+                        type="button"
+                        className={`segment${active ? ' is-active' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => setRegionInputs(p.region)}
                       >
-                        <span className={`signal-pip signal-pip-${signal}`} />
-                        <div className="sidebar-item-info">
-                          <span className="sidebar-player" title={player}>{player}</span>
-                          <span className="sidebar-meta">
-                            {grade && `${grade} · `}${bid > 0 ? `$${bid}` : '—'}
-                          </span>
-                        </div>
-                      </div>
+                        {p.label}
+                      </button>
                     );
                   })}
-                  <div className="sidebar-actions">
-                    {selectedHistoryResult && (
-                      <button className="btn btn-outline btn-small" onClick={() => setSelectedHistoryResult(null)}>
-                        ← Live
-                      </button>
-                    )}
-                    <button
-                      className="btn btn-outline btn-small"
-                      onClick={() => { setAnalysisHistory([]); setSelectedHistoryResult(null); }}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+                </div>
+                <div className="setup-fields">
+                  {(['top', 'left', 'width', 'height'] as const).map(field => (
+                    <label key={field} className="field">
+                      <span className="field-label">{field[0].toUpperCase() + field.slice(1)}</span>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={field === 'width' || field === 'height' ? 100 : 0}
+                        step={1}
+                        value={Number.isFinite(regionInputs[field]) ? regionInputs[field] : ''}
+                        onChange={e => setRegionInputs(r => ({ ...r, [field]: parseRegionValue(e.target.value) }))}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="setup-preview">
+                  <StreamViewer frameData={frameData} isAnalyzing={isAnalyzing} regionSelected={regionSelected} variant="preview" />
+                  {frameData && <p className="setup-caption">Frame {frameData.timestamp}</p>}
+                </div>
+                <div className="setup-actions">
+                  <button type="button" className="btn btn-plain btn-compact" onClick={() => setShowSetup(false)}>Cancel<kbd>Esc</kbd></button>
+                  <button type="button" className="btn btn-primary btn-compact" onClick={handleApplyRegion}>Apply region</button>
+                </div>
+              </div>
 
-        <footer className="app-footer">
-          <div className="footer-content">
-            <span>Joshinator v1.0</span>
-            <span>•</span>
-            <span>Real-time OCR & ROI Analysis</span>
-            <span>•</span>
-            <span>{isConnected ? `Connected to ${window.location.hostname}:3001` : 'Backend Offline'}</span>
-            {sessionId && (
-              <>
-                <span>•</span>
-                <span title={sessionId}>Session {sessionId.slice(0, 8)}</span>
-              </>
+              <div className="setup-group">
+                <h2 className="setup-title">
+                  <Film size={15} strokeWidth={2.25} aria-hidden />Replay a recording
+                </h2>
+                <label className="field field-wide">
+                  <span className="field-label">Video file path</span>
+                  <input
+                    type="text"
+                    placeholder="/path/to/recording.mp4"
+                    value={vodPath}
+                    onChange={e => { setVodPath(e.target.value); setVodMode(true); }}
+                    disabled={isAnalyzing}
+                  />
+                </label>
+                <div className="setup-actions">
+                  {vodStatus && <span className="setup-caption" role="status">{vodStatus}</span>}
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-compact"
+                    disabled={!vodPath || isAnalyzing}
+                    onClick={() => { setVodMode(true); setVodStatus('Loading…'); socketService.loadVOD(vodPath); }}
+                  >
+                    Load
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-compact"
+                    disabled={!vodStatus || isAnalyzing || !isConnected}
+                    onClick={() => { setIsAnalyzing(true); setShowSetup(false); socketService.startVODReplay(); }}
+                  >
+                    Replay
+                  </button>
+                </div>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        <main className={`board${isWide && evidenceOpen ? ' has-inspector' : ''}`}>
+          <motion.div className="stage" layoutScroll>
+            {connectionError && (
+              <div className="notice" role="alert">
+                <Link2Off className="notice-icon" size={18} strokeWidth={2.25} aria-hidden />
+                <p className="notice-text">{connectionError}</p>
+                <div className="notice-actions">
+                  <button type="button" onClick={handleRetryConnection} className="btn btn-secondary btn-compact">
+                    <RotateCw size={14} strokeWidth={2.25} aria-hidden />Retry
+                  </button>
+                  <button type="button" onClick={clearConnectionError} className="icon-btn" aria-label="Dismiss connection error">
+                    <X size={16} strokeWidth={2.25} aria-hidden />
+                  </button>
+                </div>
+              </div>
             )}
-          </div>
+            {error && (
+              <div className="notice" role="alert">
+                <p className="notice-text">{error}</p>
+                <div className="notice-actions">
+                  <button type="button" onClick={clearError} className="icon-btn" aria-label="Dismiss message">
+                    <X size={16} strokeWidth={2.25} aria-hidden />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedHistoryResult && (
+              <div className="viewing-bar" role="status">
+                <span className="viewing-bar-text">
+                  Viewing {formatLot(selectedHistoryResult.lot_number) || 'a past lot'} · {formatClockTime(selectedHistoryResult.received_at)}
+                </span>
+                <button type="button" className="btn btn-primary btn-compact" onClick={() => setSelectedHistoryResult(null)}>
+                  Back to live<kbd>Esc</kbd>
+                </button>
+              </div>
+            )}
+
+              <div ref={cardRef}>
+                <AnalysisDisplay
+                  result={displayedResult}
+                  isAnalyzing={isAnalyzing && !selectedHistoryResult}
+                  source={resultSource}
+                  idle={idle}
+                  thumbnail={
+                    selectedHistoryResult || resultSource === 'demo' ? undefined : (
+                      <StreamViewer frameData={frameData} isAnalyzing={isAnalyzing} regionSelected={regionSelected} />
+                    )
+                  }
+                  onOpenEvidence={isWide ? undefined : toggleEvidence}
+                  evidenceExpanded={evidenceOpen}
+                />
+              </div>
+
+              <ResultsTicker
+                history={analysisHistory}
+                selected={selectedHistoryResult}
+                onSelect={setSelectedHistoryResult}
+                onClear={handleClearHistory}
+              />
+          </motion.div>
+
+          {isWide && evidenceOpen && (
+            <aside className="inspector" aria-label="Evidence">
+              {evidence}
+            </aside>
+          )}
+        </main>
+
+        <footer className="footer">
+          <span>Watch-only. It never places bids.</span>
+          {sessionId && <span title={sessionId}>Session {sessionId.slice(0, 8)}</span>}
+          <span className="footer-keys" aria-label="Keyboard shortcuts">
+            <span><kbd>S</kbd> Start/stop</span>
+            <span><kbd>R</kbd> Setup</span>
+            <span><kbd>E</kbd> Evidence</span>
+            <span><kbd>Esc</kbd> Back</span>
+            {DEMO_MODE && <span><kbd>N</kbd> Next sample lot</span>}
+          </span>
         </footer>
-      </main>
-    </div>
+
+        {!isWide && (
+          <EvidenceSheet open={evidenceOpen} onClose={() => setEvidenceOpen(false)} title={sheetTitle}>
+            {evidence}
+          </EvidenceSheet>
+        )}
+
+        <AnimatePresence>
+          {clearedHistory && (
+            <motion.div
+              className="toast"
+              role="status"
+              initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
+              transition={SPRING}
+            >
+              <span>Cleared {clearedHistory.length} {clearedHistory.length === 1 ? 'lot' : 'lots'}</span>
+              <button type="button" className="btn btn-plain btn-compact toast-undo" onClick={handleUndoClear}>Undo</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </MotionConfig>
   );
 }
 
